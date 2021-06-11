@@ -1,0 +1,95 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+source /etc/profile
+
+set -e
+set -u
+shopt -s nullglob
+
+# Target variables
+TDEVICE=raspberry-${BTARGET}
+
+# Output variables
+ODIR=/output
+OTMP=$(mktemp -d)
+OIMG="${ODIR}/gentoo-${TPARCH}-${TDEVICE}.img"
+OROOTFS=${WITH_ROOTFS:-0}
+export XZ_OPT="-2 -T0" # multithreaded
+
+# Check whether the output directory exists
+if [[ ! -d ${ODIR} ]]; then
+	echo "docker-entrypoint: output directory does not exist!"
+	exit 1
+fi
+
+# Generate and partition a relatively large image
+# TODO: Research a better way to do this, without wasted space and large files.
+fallocate -l 2048M ${OIMG}
+sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${OIMG}
+  o # clear the in memory partition table
+  n # new partition
+  p # primary partition
+  1 # partition number 1
+    # default - start at beginning of disk
+  +128M # boot parttion
+  n # new partition
+  p # primary partition
+  2 # partion number 2
+    # default, start immediately after preceding partition
+    # default, extend partition to end of disk
+  a # make a partition bootable
+  1 # bootable partition is partition 1 -- /dev/sda1
+  t # change a partition type
+  1 # change type to W95 FAT32 (LBA)
+  c # toggle the DOS compatibility flag
+  p # print the in-memory partition table
+  w # write the partition table
+  q # done
+EOF
+
+# Setup the image file as a loopback device for formatting
+# NOTE: Using `--partscan` here would register only in the default namespace.
+if ! ODEV=$(losetup --show --find ${OIMG}); then
+	echo "docker-entrypoint: unable to setup a loopback device!"
+	exit 1
+elif ! kpartx -usv ${ODEV}; then
+	echo "docker-entrypoint: unable to update partition mappings!"
+	exit 1
+fi
+
+MDIR=$(mktemp -d)
+ODEVN=$(basename ${ODEV})
+
+# Format and setup root partition
+mkfs.ext4 -F /dev/mapper/${ODEVN}p2
+mount /dev/mapper/${ODEVN}p2 ${MDIR}
+	rsync --archive --hard-links --info=progress2 ${SYSROOT}/. ${MDIR}
+umount ${MDIR}
+
+# Format and setup boot partition
+mkfs.vfat -F32 /dev/mapper/${ODEVN}p1
+mount /dev/mapper/${ODEVN}p1 ${MDIR}
+	mkdir -p ${MDIR}/overlays
+	cp ${SYSROOT}/boot/dtbs/broadcom/bcm2711-rpi-4-b.dtb ${MDIR}/
+	cp -r ${SYSROOT}/boot/dtbs/overlays/*.dtbo  ${MDIR}/overlays/.
+	cp -r ${SYSROOT}/boot/* ${MDIR}/
+	mv ${MDIR}/Image ${MDIR}/kernel8.img
+	echo "console=serial0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 elevator=deadline fsck.repair=yes rw rootwait" > ${MDIR}/cmdline.txt
+umount ${MDIR}
+
+if (( OROOTFS )); then
+	# Package the root filesystem as a compressed archive
+	# NOTE: We use `.` to specify contents of the current (SYSROOT) directory.
+	OFILE="${ODIR}/rootfs-${TPARCH}-${TDEVICE}.tar.xz"
+	tar --directory=${SYSROOT} --totals --create --xz --file ${OFILE} .
+fi
+
+# Flush cached writes, remove devices
+sync && kpartx -dv ${ODEV} && losetup -d ${ODEV}
+
+# Compress resulting raw disk image
+xz --compress ${OIMG}
