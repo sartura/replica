@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+# In a dependency chain beginning with findutils
+=dev-libs/libiconv-1.15 ~arm64
+
+# 3.3.17 is not yet stable in ::musl
+=sys-process/procps-3.3.17 ~arm ~arm64

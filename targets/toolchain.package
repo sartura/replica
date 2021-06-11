@@ -1,0 +1,40 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+source /etc/profile
+
+set -e
+set -u
+shopt -s nullglob
+
+# Output variables
+ODIR=/output
+OTMP=$(mktemp -d)
+OWNER=$(stat -c '%u:%g' ${ODIR})
+
+# Check whether the output directory exists
+if [[ ! -d ${ODIR} ]]; then
+	echo "docker-entrypoint: output directory does not exist!"
+	exit 1
+else
+	ODIR=${ODIR}/cross-${CTARGET}
+	[[ -d ${ODIR}  ]] && rm -rf ${ODIR}
+	mkdir ${ODIR}
+fi
+
+# Create binary Gentoo packages from the toolchain and copy them over
+cpkgs=$(eix-installed -a -= | grep "cross-${CTARGET}/*")
+
+env -u SYSROOT -u CHOST -u CTARGET \
+	quickpkg --include-unmodified-config=y ${cpkgs}
+cp --no-target-directory --recursive \
+	/var/cache/binpkgs/cross-${CTARGET} ${ODIR}
+
+# Fix permissions
+chown ${OWNER} -R ${ODIR}
+
+# Flush cached writes
+sync

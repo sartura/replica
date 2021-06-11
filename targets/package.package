@@ -1,0 +1,34 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+source /etc/profile
+
+set -e
+set -u
+shopt -s nullglob
+
+# Variables
+ODIR=/output
+PKGCPN=""
+PKGPN=""
+
+# Check whether the output directory exists
+if [[ ! -d ${ODIR} ]]; then
+	echo "docker-entrypoint: output directory does not exist!"
+	exit 1
+fi
+
+if ! PKGCPN=$(ROOT=${SYSROOT} qdepends --root=${SYSROOT} "${PACKAGE}" | cut -d':' -f1); then
+	echo "docker-entrypoint: no such package ${PACKAGE}!"
+	exit 1
+fi
+
+PKGPN=$(echo ${PKGCPN} | cut -d'/' -f2);
+
+install -m644 ${SYSROOT}/packages/${PKGCPN}.tbz2 ${ODIR}/${PKGPN}.tar.bz2
+
+# Flush cached writes
+sync

@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+# Pulls in a large dependency graph and results in build failure
+dev-libs/libxml2 python

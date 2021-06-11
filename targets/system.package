@@ -1,0 +1,23 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+source /etc/profile
+
+set -e
+set -u
+shopt -s nullglob
+
+# Output variables
+ODIR=/output
+
+# Check whether the output directory exists
+if [[ ! -d ${ODIR} ]]; then
+	echo "docker-entrypoint: output directory does not exist!"
+	exit 1
+fi
+
+# Flush cached writes
+sync

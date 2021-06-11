@@ -1,0 +1,4 @@
+gentoo:base
+gentoo:default/linux/amd64
+gentoo:arch/amd64
+gentoo:arch/amd64/no-multilib

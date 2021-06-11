@@ -1,0 +1,43 @@
+dnl # These variables should be defined by the target.
+ifdef(`__kernel_branch__',, `m4exit(1)')dnl
+ifdef(`__kernel_remote__',, `m4exit(1)')dnl
+
+dnl # Define local defaults
+setdef(`__genkernel_target__', `all')dnl
+setdef(`__kernel_target__', `all')dnl
+
+# Download kernel sources
+RUN __renv__ \
+    git clone --depth=1 --branch "__kernel_branch__" __kernel_remote__ \
+        /usr/src/linux && rm -rf /usr/src/linux/.git && \
+    # NOTE: Portage requires a reference directory
+    ln -sf /usr/src/linux ${SYSROOT}/usr/src/linux
+
+# Configure, build, and install the kernel
+ifdef(`__kernel_config__', `dnl
+COPY __kernel_config__ /usr/src/linux/.config
+')dnl
+RUN __renv__ __rdistfiles__ __rccache__ \
+    # NOTE: This program is used during creation of the initramfs, but since
+    #       we are cross-compiling it will usually fail.
+    # Replace it with a symlink to a dummy program with success exit code.
+    rm $(which lddtree) && ln -s $(which true) /usr/bin/lddtree && \
+    env -u SYSROOT -u CHOST -u CTARGET \
+        genkernel --no-menuconfig --no-clean --no-cleanup --no-sandbox --no-nice \
+            --loglevel=3 \
+            --cross-compile=${CTARGET} \
+            --makeopts="$(echo ${MAKEOPTS} | sed 's/=/ /g')" \
+            --kerneldir=/usr/src/linux \
+ifdef(`__kernel_config__', `dnl
+            --kernel-config=/usr/src/linux/.config \
+',`ifelse(index(__CTARGET__, `arm'),-1,`dnl
+            --kernel-config=default \
+',`dnl
+            # TODO: genkernel upstream does not ship with default config
+            --kernel-config=/usr/src/linux/arch/arm/configs/multi_v7_defconfig \
+')')dnl
+            --kernel-modules-prefix=${SYSROOT} \
+            --initramfs-filename='initramfs-linux.img' \
+            --kernel-filename='vmlinuz-linux' \
+            --bootdir=${SYSROOT}/boot --install \
+            __genkernel_target__

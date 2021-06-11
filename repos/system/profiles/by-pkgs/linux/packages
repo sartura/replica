@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+# The intent here is to strip away packages that are large in size or not
+# required for basic operation.
+-*>=sys-devel/patch-2.7
+-*net-misc/rsync
+-*sys-apps/kbd
+-*sys-apps/kmod
+-*sys-devel/binutils
+-*sys-devel/gcc
+-*sys-devel/make
+-*sys-fs/e2fsprogs
+-*sys-process/psmisc
+-*virtual/dev-manager
+-*virtual/man
+-*virtual/modutils
+-*virtual/os-headers
+-*virtual/package-manager
+-*virtual/service-manager
+-*virtual/ssh
+
+# Remove Busybox from the default installation
+-*sys-apps/busybox
+
+# Remove packages from linux profile as well
+-*sys-apps/man-pages

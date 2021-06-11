@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+# Recently stabilized, causes build error: `Can't locate Alien/Libxml2.pm in @INC`
+=dev-perl/XML-LibXML-2.20.100

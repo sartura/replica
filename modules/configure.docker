@@ -1,0 +1,24 @@
+dnl SPDX-License-Identifier: MIT
+dnl
+dnl Copyright (c) 2021 Sartura Ltd.
+dnl
+
+dnl # The default shell is /bin/bash
+setdef(`__configure_shell__', `/bin/bash')dnl
+
+RUN \
+    # NOTE: Users and groups cross-installation is not fully supported.
+    # https://bugs.gentoo.org/541406
+    for f in passwd group shadow; do \
+        cp -f /etc/${f} ${SYSROOT}/etc/${f}; \
+    done && \
+    # NOTE: `sys-apps/baselayout` assumes `/bin/bash` by default
+    # TODO: Research a way to avoid this.
+    sed -i "s,/bin/bash,__configure_shell__," ${SYSROOT}/etc/passwd && \
+    # NOTE: This enables passwordless login for the TTY. Because of sandboxing, we
+    #       cannot use tools like `chpasswd`.
+    # TODO: `echo "root:*" | chpasswd --root ${SYSROOT}`
+    sed -i "s/root:\*:/root::/" ${SYSROOT}/etc/shadow && \
+    # Create localtime file to default to UTC timezone.
+    # Otherwise boot will be stopped until timezone is selected.
+    touch ${SYSROOT}/etc/localtime

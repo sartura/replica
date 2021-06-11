@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+# Issue during building with `allyesconfig`
+sys-apps/busybox
+
+# https://bugs.gentoo.org/712192
+=sys-apps/coreutils-8.31-r1

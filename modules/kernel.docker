@@ -1,0 +1,32 @@
+dnl SPDX-License-Identifier: MIT
+dnl
+dnl Copyright (c) 2021 Sartura Ltd.
+dnl
+
+dnl # These variables should be defined by the target.
+ifdef(`__kernel_remote__',, `m4exit(1)')dnl
+ifdef(`__kernel_branch__',, `m4exit(1)')dnl
+ifdef(`__kernel_config__',, `m4exit(1)')dnl
+
+dnl # Define local defaults
+setdef(`__kernel_image__',  `Image')dnl
+
+# Download kernel sources
+RUN __renv__ \
+    git clone --depth=1 --branch "__kernel_branch__" __kernel_remote__ \
+        /usr/src/linux && rm -rf /usr/src/linux/.git && \
+    # NOTE: Portage requires a reference directory
+    ln -sf /usr/src/linux ${SYSROOT}/usr/src/linux
+
+# Configure, build, and install the kernel
+COPY __kernel_config__ /usr/src/linux/.config
+RUN __renv__ __rdistfiles__ __rccache__ \
+    cd /usr/src/linux && \
+    export ARCH=${TKARCH} CROSS_COMPILE="${CTARGET}-" \
+        # NOTE: Stripping the timestamp helps increase compiler cache hits.
+        KBUILD_BUILD_TIMESTAMP="<stripped>" && \
+    make ${MAKEOPTS} olddefconfig && \
+    make ${MAKEOPTS} __kernel_image__ modules dtbs && \
+    make ${MAKEOPTS} INSTALL_MOD_PATH="${SYSROOT}" INSTALL_MOD_STRIP=1 modules_install && \
+    make ${MAKEOPTS} INSTALL_DTBS_PATH="${SYSROOT}/boot/dtbs" dtbs_install && \
+    install -m644 ./arch/${TKARCH}/boot/__kernel_image__ ${SYSROOT}/boot/__kernel_image__

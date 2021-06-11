@@ -1,0 +1,9 @@
+[submodule "repos/gentoo"]
+	path = repos/gentoo
+	url = https://anongit.gentoo.org/git/repo/gentoo.git
+[submodule "repos/musl"]
+	path = repos/musl
+	url = https://anongit.gentoo.org/git/proj/musl.git
+[submodule "repos/replica"]
+	path = repos/replica
+	url = git@github.com:sartura/replica-overlay-main.git

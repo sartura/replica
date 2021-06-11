@@ -1,0 +1,3 @@
+gentoo:base
+gentoo:default/linux/arm64
+gentoo:arch/arm64/little-endian

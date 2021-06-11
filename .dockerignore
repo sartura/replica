@@ -1,0 +1,12 @@
+# VCS directories and files
+.git
+**/.git
+**/.gitignore
+**/.keep
+
+# VIM ctags files
+**/tags
+
+# Project directories not required in the context
+modules/
+output/

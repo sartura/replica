@@ -1,0 +1,22 @@
+dnl SPDX-License-Identifier: MIT
+dnl
+dnl Copyright (c) 2021 Sartura Ltd.
+dnl
+include(`modules/base.docker')dnl
+include(`modules/system.docker')dnl
+
+setdef(`__kernel_remote__', `https://github.com/sartura/linux.git')dnl
+setdef(`__kernel_branch__', `replica/any-v5.9.16')dnl
+setdef(`__genkernel_target__', `bzImage')dnl
+
+include(`modules/genkernel.docker')dnl
+
+# Repository setup
+COPY ./repos/replica    /var/db/repos/replica
+COPY ./config/portage   ${SYSROOT}/etc/portage
+RUN __renv__ __rdistfiles__ __rccache__ \
+    set_repository_conf ${SYSROOT} replica 100
+
+# Packaging utilities
+COPY ./targets/_BTARGET_.package /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]

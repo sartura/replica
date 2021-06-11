@@ -1,0 +1,8 @@
+# Ignore output files, but keep the directory
+output/*
+!output/.gitkeep
+
+# Intermediate and temporary files
+temp/
+targets/*.cache
+environment.cache

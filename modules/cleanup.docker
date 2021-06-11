@@ -1,0 +1,78 @@
+dnl SPDX-License-Identifier: MIT
+dnl
+dnl Copyright (c) 2021 Sartura Ltd.
+dnl
+
+dnl # Do not clean additional stuff by default
+setdef(`__cleanup_extreme__', `no')dnl
+
+# Remove unneeded dependencies and build-time dependencies
+RUN __renv__ __rdistfiles__ __rccache__ \
+    CLEAN_DELAY=0 cross-emerge -qv --depclean --with-bdeps=n && \
+    # NOTE: Generate package information before removing Portage package metadata.
+    cross-emerge -qv --pretend --depclean >> ${SYSROOT}/sysdesc && \
+    qlist -ICUv --root=${SYSROOT} | \
+        sed 's, -\?\(abi\|cpu_flags\|python_targets\)[_a-z0-9]\+,,g' | \
+        awk "BEGIN { OFS = \";\" } ; { \
+            cmd = \"qsize -f --root=${SYSROOT} \" \$1 \" | cut -d',' -f3\"; \
+            cmd | getline SIZE; close(cmd); \
+            cmd = \"quse --license --package \" \$1 \" | cut -d':' -f2\"; \
+            cmd | getline LICENSE; close(cmd); \
+            rest = \"\"; for(i=2;i<=NF;++i) { rest = rest \$i FS; } \
+            printf \"%s%s%s%s%s%s%s\n\", \$1, OFS, SIZE, OFS, LICENSE, OFS, rest; \
+        }" | sort -k2 -h | column -t -s';' >> ${SYSROOT}/sysdesc
+
+# Cleanup filesystem
+RUN \
+    #
+    # Make certain directories empty (*/*)
+    find ${SYSROOT}/usr/src -mindepth 1 -delete && \
+    find ${SYSROOT}/tmp -mindepth 1 -delete && \
+    #
+    # Remove header files and libraries used for static linking (*/*)
+    rm -rf ${SYSROOT}/usr/include && \
+    find ${SYSROOT} -type f -name "*.h" -delete && \
+    find ${SYSROOT} -type f -name "*.a" -delete && \
+    #
+    # Remove helper data used for C compilation (*/*)
+    rm -rf ${SYSROOT}/usr/lib{,64}/pkgconfig && \
+    #
+    # Remove Gentoo-specific configuration and files (*/*, crossdev-generated)
+    # NOTE: Portage uses .keep files to track directories which are installed
+    #       empty by default.
+    find ${SYSROOT} -type f -name '\.keep*' -delete && \
+    rm -rf ${SYSROOT}/packages && \
+    rm -rf ${SYSROOT}/etc/portage && \
+    rm -rf ${SYSROOT}/var/db/pkg && \
+    rm -rf ${SYSROOT}/var/cache/edb && \
+    rm -rf ${SYSROOT}/var/lib/{gentoo,portage} && \
+    #
+    # NOTE: Gentoo uses this path for cross-compile tools, e.g. binutils. Additionally,
+    #       this path can sometimes be errantly installed to from SYSROOT-unaware
+    #       eclasses e.g. systemd or ebuilds e.g. gentoo-systemd-integration.
+    rm -rf ${SYSROOT}/usr/${CTARGET} && \
+ifelse(index(__cleanup_extreme__, `yes'),-1,,`dnl
+    #
+    # Remove localisation data (*/*, sys-libs/glibc), charset conversion
+    # modules (sys-libs/glibc), additional documentation (dev-libs/libxml2)
+    rm -rf ${SYSROOT}/usr/share/{locale,i18n,gtk-doc} && \
+    rm -rf ${SYSROOT}/usr/lib{,64}/gconv && \
+    #
+    # Remove additional unused data (sys-devel/binutils, sys-libs/ncurses, sys-libs/timezone-data)
+    rm -rf ${SYSROOT}/usr/share/{binutils-data,terminfo,zoneinfo} && \
+    #
+    # Remove miscellaneous files (sys-apps/file, sys-apps/hwids, sys-apps/pciutils)
+    rm -rf ${SYSROOT}/usr/share/misc && \
+    #
+    # Cleanup systemd installation (sys-apps/systemd)
+    rm -rf ${SYSROOT}/usr/bin/{systemd-analyze,kernel-install} && \
+    rm -rf ${SYSROOT}/etc/{kernel,udev/hwdb.bin} && \
+    rm -rf ${SYSROOT}/usr/lib{,64}/{kernel,udev/hwdb.d} && \
+    # https://www.freedesktop.org/wiki/Software/systemd/catalog/
+    rm -rf ${SYSROOT}/usr/lib{,64}/systemd/catalog && \
+')dnl
+    #
+    # NOTE: Output sorted filesystem tree as system description information.
+    echo -e '---\n' >> ${SYSROOT}/sysdesc && \
+    du -ah ${SYSROOT} | sed "s,${SYSROOT},," | sort -rh >> ${SYSROOT}/sysdesc
+

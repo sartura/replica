@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+# Causes compilation issues in 5.40
+sys-apps/file seccomp

@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+# build dependencies and tooling
+*sys-devel/clang:12
+*dev-util/cmake
+*sys-apps/dtc
+*sys-devel/bc
+*sys-devel/crossdev
+*sys-kernel/genkernel
+
+# packaging tools
+*dev-embedded/u-boot-tools
+*sys-fs/mtd-utils
+*sys-fs/multipath-tools
+*sys-fs/squashfs-tools
+
+# general development
+*dev-libs/elfutils
+*dev-util/dwarves
+*dev-util/strace
+*dev-util/bpftool
+
+# gentoo packages
+*app-portage/eix
+*app-portage/gentoolkit
+
+# additional packages
+*app-editors/vim
+*dev-vcs/git

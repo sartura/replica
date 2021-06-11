@@ -1,0 +1,9 @@
+dnl SPDX-License-Identifier: MIT
+dnl
+dnl Copyright (c) 2021 Sartura Ltd.
+dnl
+include(`modules/base.docker')dnl
+
+# Packaging utilities
+COPY ./targets/_BTARGET_.package /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]

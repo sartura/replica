@@ -1,0 +1,55 @@
+dnl SPDX-License-Identifier: MIT
+dnl
+dnl Copyright (c) 2021 Sartura Ltd.
+dnl
+# syntax = docker/dockerfile:1.1.3-experimental
+FROM gentoo/stage3:replica
+COPY ./repos/gentoo /var/db/repos/gentoo
+
+# Configure environment
+COPY ./environment.sh /etc/profile.d/replica.sh
+SHELL ["/bin/bash", "-l", "-c"]
+
+# Install and configure ccache
+ifdef(`_with_ccache_', `
+RUN __renv__ __rdistfiles__ __rccache__ \
+    emerge -qv dev-util/ccache && \
+    mkdir -p /var/cache/ccache && chmod 2777 /var/cache/ccache && \
+    echo "max_size = 100.0G" >> /var/cache/ccache/ccache.conf && \
+    echo "umask = 002" >> /var/cache/ccache/ccache.conf && \
+    echo "compiler_check = %compiler% -v" >> /var/cache/ccache/ccache.conf && \
+    echo "cache_dir_levels = 3" >> /var/cache/ccache/ccache.conf && \
+    # NOTE: Portage supports the ccache feature, but we set PATH for any
+    #       non-Portage compilations.
+    echo "CCACHE_DIR=\"/var/cache/ccache\"" > /etc/env.d/10ccache && \
+    echo "PATH=\"/usr/lib/ccache/bin\"" >> /etc/env.d/10ccache && \
+    echo "FEATURES=\"ccache\"" >> /etc/env.d/10ccache && \
+    env-update
+')dnl
+
+# Transfer custom overlay from the context and update system
+COPY ./repos/host /var/db/repos/host
+RUN __renv__ __rdistfiles__ __rccache__ \
+    mkdir -p /etc/portage/repos.conf && \
+    set_repository_conf / host 10 && \
+    set_portage_profile / host default && \
+    emerge -vt --keep-going=n --deep --noreplace --changed-use @system
+
+# Initialize cross-compilation toolchain and basic target filesystem
+ARG CTARGET=x86_64-multilib-linux-gnu
+ENV CTARGET=${CTARGET}
+RUN __renv__ __rdistfiles__ __rccache__ \
+    # Create local crossdev repository
+    mkdir -p /var/db/repos/crossdev/metadata && \
+    echo -e "repo-name = crossdev\nmasters = gentoo\nthin-manifests = true" \
+        > /var/db/repos/crossdev/metadata/layout.conf && \
+    set_repository_conf / crossdev && \
+    # Generate and install toolchains
+    crossdev --stable --kernel "[latest]" --target ${CTARGET} && \
+    # Configure environment
+    emerge-wrapper --target ${CTARGET} --init && \
+    mkdir -p /usr/${CTARGET}/etc/portage/repos.conf && \
+    # NOTE: `emerge-wrapper` generates make.conf with unstable keyword by default.
+    sed -i '/ACCEPT_KEYWORDS=/s/ ~${ARCH}/ -~${ARCH}/g' /usr/${CTARGET}/etc/portage/make.conf
+ENV SYSROOT=/usr/${CTARGET} CHOST=${CTARGET}
+

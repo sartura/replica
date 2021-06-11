@@ -1,0 +1,24 @@
+dnl SPDX-License-Identifier: MIT
+dnl
+dnl Copyright (c) 2021 Sartura Ltd.
+dnl
+include(`modules/base.docker')dnl
+include(`modules/system.docker')dnl
+
+# Repository setup
+COPY ./repos/replica  /var/db/repos/replica
+COPY ./config/portage ${SYSROOT}/etc/portage
+
+# Environment setup
+ARG USE
+ARG PACKAGE
+RUN __renv__ __rdistfiles__ __rccache__ \
+    set_repository_conf ${SYSROOT} replica 100 && \
+    USE="${USE}" cross-emerge -vt --keep-going=n --deep --with-bdeps=y --newuse --newrepo "${PACKAGE}"
+
+# Packaging utilities
+COPY ./targets/_BTARGET_.package /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+# Inject target variable into the environment
+ENV PACKAGE=${PACKAGE} USE=${USE}

@@ -1,0 +1,40 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+source /etc/profile
+
+set -e
+set -u
+shopt -s nullglob
+
+# Target variables
+VMLINUX=/usr/src/linux/vmlinux
+
+# Output variables
+ODIR=/output
+export XZ_OPT="-2 -T0" # multithreaded
+
+# Check whether the output directory exists
+if [[ ! -d ${ODIR} ]]; then
+	echo "docker-entrypoint: output directory does not exist!"
+	exit 1
+fi
+
+# Confirm there exists BTF section header
+if ! ${CTARGET}-objdump -h ${VMLINUX} | grep '.BTF'; then
+	echo "docker-entrypoint: there is no BTF information in the ELF binary!"
+	exit 1
+fi
+
+# Dump the BTF information as a C header
+bpftool btf dump file ${VMLINUX} format c | dd of=${ODIR}/vmlinux-${TPARCH}.h
+
+# The kernel image is massive, compress and install it
+xz --compress ${VMLINUX}
+install -m644 ${VMLINUX}.xz ${ODIR}/vmlinux-${TPARCH}.elf.xz
+
+# Flush cached writes
+sync

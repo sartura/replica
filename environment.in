@@ -1,0 +1,17 @@
+dnl SPDX-License-Identifier: MIT
+dnl
+dnl Copyright (c) 2021 Sartura Ltd.
+dnl
+
+dnl Dynamic variables, will not cause cache invalidation
+MAKEOPTS="__makeopts__"
+EMERGE_DEFAULT_OPTS="__emergeopts__"
+GENTOO_MIRRORS="__mirrors__"
+
+dnl Set static variables
+# NOTE: Sandboxing inside an already sandboxed environment might be tricky
+# [1] https://github.com/moby/moby/issues/1916
+FEATURES="${FEATURES} -ipc-sandbox -pid-sandbox -network-sandbox -usersandbox -sandbox"
+
+dnl These are for debugging issues
+dnl PORTAGE_ELOG_SYSTEM="save"

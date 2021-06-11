@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+# Unmask latest versions of some packages
+app-arch/zstd ~amd64
+sys-fs/mtd-utils ~amd64
+
+# Latest version fails with `cannot find -lmpathpersist`
+=sys-fs/multipath-tools-0.8.3-r2 ~amd64
+
+# Kernel requires when building BTF information
+dev-util/dwarves ~amd64
+
+# BPF utilities and dependencies on the host
+dev-libs/libbpf ~amd64
+dev-util/bpftool ~amd64
+sys-kernel/linux-headers ~amd64
+
+# Unmask clang:12
+sys-devel/clang:12 ~amd64
+sys-devel/clang-common ~amd64
+sys-devel/clang-runtime ~amd64
+sys-devel/llvm:12 ~amd64
+sys-libs/compiler-rt ~amd64
+sys-libs/compiler-rt-sanitizers ~amd64
+sys-libs/libomp ~amd64

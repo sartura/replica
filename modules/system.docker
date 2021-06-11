@@ -1,0 +1,42 @@
+dnl SPDX-License-Identifier: MIT
+dnl
+dnl Copyright (c) 2021 Sartura Ltd.
+dnl
+
+# NOTE: The `${CTARGET}-pkg-config` wrapper sets the `PKG_CONFIG_SYSROOT_DIR`
+#       variable which is passed on to the `_systemd_get_dir()` eclass function
+#       as a path prefix. This causes ebuilds using `systemd_get_systemunitdir()`
+#       eclass API to return the full (incorrect) installation path.
+# Resolve the issue by stripping the `SYSROOT` prefix.
+RUN sed -i '/d#${EPREFIX}/i \\t\td=${d#${SYSROOT}}' \
+        /var/db/repos/gentoo/eclass/systemd.eclass && \
+    sed -i '/udevdir#${EPREFIX%\/}/i \\t\tudevdir=${udevdir#${SYSROOT}}' \
+        /var/db/repos/gentoo/eclass/udev.eclass
+
+# Transfer custom Portage overlay and emerge system package set
+COPY ./repos/system /var/db/repos/system
+ifelse(index(__CTARGET__, `musl'),-1,,`dnl
+# NOTE: Using musl may require software patches for certain programs. Upstream
+#       provides a custom overlay with such modifications.
+COPY ./repos/musl /var/db/repos/musl
+')dnl
+RUN __renv__ __rdistfiles__ __rccache__ \
+    set_repository_conf ${SYSROOT} system 10 && \
+ifelse(index(__CTARGET__, `musl'),-1,,`dnl
+    set_repository_conf ${SYSROOT} musl 20 && \
+')dnl
+    set_portage_profile ${SYSROOT} system by-ctarget/${CTARGET} && \
+    USE=build cross-emerge -vt --keep-going=n --deep --with-bdeps=y --newuse @system
+
+# NOTE: These libraries are packaged by other distributions separately, as e.g.
+#       a `gcc-libs` package. However, on Gentoo it is assumed that the system
+#       will have the entire `sys-devel/gcc` toolchain installed. Since this is
+#       not acceptable for embedded applications, we copy these files manually.
+# ~ # ldd /usr/bin/dbus-daemon | grep 'not found'
+#         libgcc_s.so.1 => not found
+RUN export _gccpath=$(find /usr/lib/gcc/${CTARGET}/* -print -quit) && \
+    # for lib in lib{asan,atomic,gcc_s,gomp,itm,stdc++,ubsan,vtv}; do \
+    for lib in lib{atomic,gcc_s,vtv}; do \
+        cp -rnla ${_gccpath}/${lib}* ${SYSROOT}/usr/lib/ || continue; \
+    done
+
