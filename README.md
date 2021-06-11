@@ -32,7 +32,7 @@ The Replica.one build system depends on the following software:
 
 * [GNU make](https://www.gnu.org/software/make/)
 * [GNU m4](https://www.gnu.org/software/m4/)
-* [Docker](https://docs.docker.com/get-docker/)
+* [Docker](https://docs.docker.com/get-docker/) (≥ 18.09)
 
 Additional recommended software:
 
