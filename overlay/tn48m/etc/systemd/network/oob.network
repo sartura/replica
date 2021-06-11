@@ -1,0 +1,6 @@
+[Match]
+Name=oob*
+
+[Network]
+DHCP=yes
+DNSSEC=false

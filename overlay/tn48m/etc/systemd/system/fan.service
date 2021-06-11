@@ -1,0 +1,10 @@
+[Unit]
+Description=FAN configuration service
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/fan
+
+[Install]
+WantedBy=multi-user.target

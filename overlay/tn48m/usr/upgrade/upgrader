@@ -1,0 +1,60 @@
+#!/bin/sh
+set -e
+
+# Script for updating in the minimal BusyBox upgrade environment
+
+board=$(strings /proc/device-tree/compatible | head -1)
+
+error_die() {
+        echo "Error: " "$*"
+        exit 1
+}
+
+do_upgrade() {
+	local install_disk=$1
+	local install_part=$2
+
+	echo "Running system upgrade for $board"
+
+	[ -n "$install_disk" ] || error_die "no installation partition passed"
+
+	[ -n "$install_part" ] || error_die "no installation partition passed"
+
+	[ -f "$FIRMWARE" ] || error_die "no firmware found for filename $FIRMWARE"
+
+	echo "Waiting 10s for kernel to finish unmounting"
+	sleep 10s
+
+	echo "Partitioning disk..."
+	parted --script -a optimal $install_disk \
+		mklabel msdos \
+		mkpart primary ext4 0% 100%
+
+	echo "Formatting disk..."
+	yes | mkfs.ext4 $install_part
+
+	mkdir hdd-disk
+	mount -t ext4 $install_part hdd-disk
+
+	echo "Extracting rootfs..."
+	tar -xpf $FIRMWARE -C hdd-disk --numeric-owner
+
+	sync
+	umount hdd-disk
+
+	echo "Rebooting the system now!"
+	sleep 2s #Ensure that its actually printed
+
+	replireboot
+}
+
+FIRMWARE=upgrade.tar
+case "$board" in
+	delta,tn48m)
+		do_upgrade "/dev/sda" "/dev/sda1"
+		;;
+	*)
+		echo "Unsupported board:" $board
+		exit 1
+	;;
+esac

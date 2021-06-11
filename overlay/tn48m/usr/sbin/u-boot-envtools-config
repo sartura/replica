@@ -1,0 +1,50 @@
+#!/bin/sh
+set -e
+
+board=$(strings /proc/device-tree/compatible | head -1)
+
+find_mtd_index() {
+        local PART="$(grep "\"$1\"" /proc/mtd | awk -F: '{print $1}')"
+        local INDEX="${PART##mtd}"
+
+        echo ${INDEX}
+}
+
+find_mtd_part() {
+        local INDEX=$(find_mtd_index "$1")
+        local PREFIX=/dev/mtdblock
+
+        [ -d /dev/mtdblock ] && PREFIX=/dev/mtdblock/
+        echo "${INDEX:+$PREFIX$INDEX}"
+}
+
+find_mtd_chardev() {
+        local INDEX=$(find_mtd_index "$1")
+        local PREFIX=/dev/mtd
+
+        [ -d /dev/mtd ] && PREFIX=/dev/mtd/
+        echo "${INDEX:+$PREFIX$INDEX}"
+}
+
+env_configure() {
+	local part=$1
+	local offset=$2
+	local env_size=$3
+	local sector_size=$4
+	local mtd
+
+	mtd=$(find_mtd_chardev $part)
+	[ -n "$mtd" ] || caldata_die "no mtd device found for partition $part"
+
+	echo "$mtd $offset $env_size $sector_size" > /etc/fw_env.config
+}
+
+case "$board" in
+	delta,tn48m)
+		env_configure "u-boot-env" "0x0" "0x10000" "0x10000"
+		;;
+	*)
+		echo "Unsupported board:" $board
+		exit 1
+	;;
+esac

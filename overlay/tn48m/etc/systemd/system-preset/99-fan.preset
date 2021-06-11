@@ -1,0 +1,2 @@
+# Enable FAN configuration service
+enable fan.service

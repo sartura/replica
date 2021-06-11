@@ -1,0 +1,5 @@
+[Match]
+Name=swbridge
+
+[Network]
+DHCP=yes

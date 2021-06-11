@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# Script to enable updating TN48M based systems using Systemd
+
+RAMROOT=ramroot
+TTYSHELL=ttyS0
+FIRMWARE=upgrade.tar
+
+# Create our tmpfs folder to bind to
+mkdir /$RAMROOT
+# Mount it as tmpfs with size limit of 512MB
+mount -n -t tmpfs -o size=512m none /$RAMROOT
+# Create needed folders inside
+cd /$RAMROOT
+mkdir -p etc bin sbin lib lib64 var/lock archive
+# Copy neccessary libs tools to work
+cp -a /lib64/* /$RAMROOT/lib64
+cp -a /lib/ld-linux-aarch64.so.* /$RAMROOT/lib
+cp -a /usr/lib64/libparted.so.* /$RAMROOT/lib64
+# Copy mkfs and parted tools
+cp -a /sbin/mkfs.ext4 /$RAMROOT/sbin
+cp -a /sbin/mke2fs /$RAMROOT/sbin
+cp /usr/sbin/parted /$RAMROOT/sbin
+cp /bin/tar /$RAMROOT/sbin
+# Copy U-boot envtools
+cp /etc/fw_env.config /$RAMROOT/etc
+cp /usr/bin/fw_printenv /$RAMROOT/sbin
+cp /usr/bin/fw_setenv /$RAMROOT/sbin
+# Copy upgrade scripts
+cp /usr/upgrade/watchdog /$RAMROOT
+cp /usr/upgrade/upgrader /$RAMROOT
+# Copy reboot tool
+cp /usr/sbin/replireboot /$RAMROOT/sbin
+# Copy firmware image
+cp /tmp/$FIRMWARE /$RAMROOT
+# Configure BusyBox init
+echo "${TTYSHELL}::askfirst:-/bin/sh" >> /$RAMROOT/etc/inittab
+echo "::restart:/bin/init" >> /$RAMROOT/etc/inittab
+echo "::ctrlaltdel:/sbin/replireboot" >> /$RAMROOT/etc/inittab
+echo "::once:/watchdog" >> /$RAMROOT/etc/inittab
+echo "::once:/upgrader" >> /$RAMROOT/etc/inittab
+# Install staticly compiled BusyBox to bin
+cp /bin/busybox /$RAMROOT
+chmod +x busybox
+./busybox --install bin
+rm busybox
+# Remove share property from rootfs binding
+unshare -m

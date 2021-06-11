@@ -1,0 +1,69 @@
+#!/bin/sh
+
+board=$(strings /proc/device-tree/compatible | head -1)
+sysfs_class_path="/sys/class/hwmon/"
+
+hwmon_find() {
+        local name=$1
+
+        hwmon_devices=$(ls ${sysfs_class_path} | wc -l)
+
+        i=0
+        while [ "$i" -lt $hwmon_devices ]
+        do
+                hwmon_name_temp=$(cat ${sysfs_class_path}hwmon${i}/name)
+                if [ $name = $hwmon_name_temp ]
+                then
+                        echo ${i}
+                fi
+        i=$(( i + 1 ))
+        done
+}
+
+fan_configure() {
+	local name=$1
+	local temp_min=$2
+	local temp_max=$3
+	local fan_pwm_min=$4
+	local fan_pwm_max=$5
+
+	local sysfs_path="${sysfs_class_path}hwmon$(hwmon_find $name)"
+
+	echo "$temp_min" > "${sysfs_path}/temp1_auto_point1_temp"
+	echo "$temp_min" > "${sysfs_path}/temp2_auto_point1_temp"
+	echo "$temp_min" > "${sysfs_path}/temp3_auto_point1_temp"
+
+	echo "$temp_max" > "${sysfs_path}/temp1_auto_point2_temp"
+	echo "$temp_max" > "${sysfs_path}/temp2_auto_point2_temp"
+	echo "$temp_max" > "${sysfs_path}/temp3_auto_point2_temp"
+
+	echo "$fan_pwm_min" > "${sysfs_path}/pwm1_auto_point1_pwm"
+	echo "$fan_pwm_min" > "${sysfs_path}/pwm2_auto_point1_pwm"
+	echo "$fan_pwm_min" > "${sysfs_path}/pwm3_auto_point1_pwm"
+
+	echo "$fan_pwm_max" > "${sysfs_path}/pwm1_auto_point2_pwm"
+	echo "$fan_pwm_max" > "${sysfs_path}/pwm2_auto_point2_pwm"
+	echo "$fan_pwm_max" > "${sysfs_path}/pwm3_auto_point2_pwm"
+
+	echo "1" > "${sysfs_path}/pwm1_auto_channels_temp"
+	echo "1" > "${sysfs_path}/pwm2_auto_channels_temp"
+	echo "1" > "${sysfs_path}/pwm3_auto_channels_temp"
+
+	echo "1" > "${sysfs_path}/pwm1_stall_disable"
+	echo "1" > "${sysfs_path}/pwm2_stall_disable"
+	echo "1" > "${sysfs_path}/pwm3_stall_disable"
+
+	echo "2" > "${sysfs_path}/pwm1_enable"
+	echo "2" > "${sysfs_path}/pwm2_enable"
+	echo "2" > "${sysfs_path}/pwm3_enable"
+}
+
+case "$board" in
+	delta,tn48m)
+		fan_configure "adt7473" "25000" "50000" "128" "204"
+		;;
+	*)
+		echo "Unsupported board:" $board
+		exit 1
+	;;
+esac

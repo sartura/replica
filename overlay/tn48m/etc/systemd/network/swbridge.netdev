@@ -1,0 +1,6 @@
+[NetDev]
+Name=swbridge
+Kind=bridge
+
+[Bridge]
+STP=true

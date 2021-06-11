@@ -1,0 +1,5 @@
+[Match]
+Name=sw*
+
+[Network]
+Bridge=swbridge

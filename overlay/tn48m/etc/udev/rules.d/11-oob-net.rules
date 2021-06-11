@@ -1,0 +1,1 @@
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="mvpp2", NAME="oob$attr{dev_port}"
