@@ -38,7 +38,7 @@ Additional recommended software:
 
 * [Git](https://git-scm.com/)
 
-For more information on the requirements and how to set up the host system, consult the [`./docs/REQUIREMENTS.md` document](./docs/REQUIREMENTS.md).
+Consult the [`./docs/REQUIREMENTS.md` document](./docs/REQUIREMENTS.md) for more information regarding dependency version details and related instructions.
 
 ## License
 
