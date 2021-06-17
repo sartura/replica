@@ -29,14 +29,12 @@ cp /usr/bin/fw_setenv /$RAMROOT/sbin
 # Copy upgrade scripts
 cp /usr/upgrade/watchdog /$RAMROOT
 cp /usr/upgrade/upgrader /$RAMROOT
-# Copy reboot tool
-cp /usr/sbin/replireboot /$RAMROOT/sbin
 # Copy firmware image
 cp /tmp/$FIRMWARE /$RAMROOT
 # Configure BusyBox init
 echo "${TTYSHELL}::askfirst:-/bin/sh" >> /$RAMROOT/etc/inittab
 echo "::restart:/bin/init" >> /$RAMROOT/etc/inittab
-echo "::ctrlaltdel:/sbin/replireboot" >> /$RAMROOT/etc/inittab
+echo "::ctrlaltdel:/bin/reboot" >> /$RAMROOT/etc/inittab
 echo "::once:/watchdog" >> /$RAMROOT/etc/inittab
 echo "::once:/upgrader" >> /$RAMROOT/etc/inittab
 # Install staticly compiled BusyBox to bin

@@ -45,7 +45,7 @@ do_upgrade() {
 	echo "Rebooting the system now!"
 	sleep 2s #Ensure that its actually printed
 
-	replireboot
+	reboot
 }
 
 FIRMWARE=upgrade.tar
