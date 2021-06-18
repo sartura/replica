@@ -103,6 +103,10 @@ ifneq ($(WITH_ROOTFS),)
   DRUNOPTS += --env WITH_ROOTFS=1
 endif
 
+# Get GIT HEAD hash
+# This is used to identify origin of the running device image
+GIT_HASH := $(shell git rev-parse HEAD)
+M4FLAGS += -D__git_hash__="$(GIT_HASH)"
 
 # Always rebuild these targets
 #
