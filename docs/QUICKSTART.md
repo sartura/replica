@@ -37,3 +37,9 @@ where `<tuple>` is a [short string describing the toolchain and system combinati
 ## Supported targets
 
 A list of currently supported targets and additional instructions for hardware preparation are available in the [`../targets/README.md` document](../targets/README.md).
+
+## After installation
+
+After installation devices are accesible via the serial console.
+
+The default system login is `root` with password `replica`.
