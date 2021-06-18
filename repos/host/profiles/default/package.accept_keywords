@@ -10,8 +10,8 @@ sys-fs/mtd-utils ~amd64
 # Latest version fails with `cannot find -lmpathpersist`
 =sys-fs/multipath-tools-0.8.3-r2 ~amd64
 
-# Kernel requires when building BTF information
-dev-util/dwarves ~amd64
+# Required for dumping BTF information, use latest version
+dev-util/pahole ~amd64
 
 # BPF utilities and dependencies on the host
 dev-libs/libbpf ~amd64

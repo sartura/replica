@@ -19,7 +19,7 @@
 
 # general development
 *dev-libs/elfutils
-*dev-util/dwarves
+*dev-util/pahole
 *dev-util/strace
 *dev-util/bpftool
 
