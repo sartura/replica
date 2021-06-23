@@ -1,0 +1,7 @@
+Distribution: (put your distribution name and version, if applicable. e.g. Ubuntu 20.04)
+RAM: (put here amount of available memory)
+Filesystem: (put here e.g. ext*, btrfs, zfs, ...)
+Docker daemon logs: (attach here logs of the Docker daemon process)
+Additional logs: (attach here any additional logs, e.g. dmesg, journalctl, ...)
+
+Issue description:
