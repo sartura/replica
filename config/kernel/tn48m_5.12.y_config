@@ -1,10 +1,10 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/arm64 5.12.9 Kernel Configuration
+# Linux/arm64 5.12.12 Kernel Configuration
 #
-CONFIG_CC_VERSION_TEXT="aarch64-unknown-linux-gnu-gcc (Gentoo 10.2.0-r5 p6) 10.2.0"
+CONFIG_CC_VERSION_TEXT="aarch64-unknown-linux-gnu-gcc (Gentoo 10.3.0 p1) 10.3.0"
 CONFIG_CC_IS_GCC=y
-CONFIG_GCC_VERSION=100200
+CONFIG_GCC_VERSION=100300
 CONFIG_CLANG_VERSION=0
 CONFIG_LD_IS_BFD=y
 CONFIG_LD_VERSION=23502
@@ -1623,6 +1623,7 @@ CONFIG_BLK_DEV_LOOP_MIN_COUNT=8
 #
 # CONFIG_BLK_DEV_NVME is not set
 # CONFIG_NVME_FC is not set
+# CONFIG_NVME_TCP is not set
 # CONFIG_NVME_TARGET is not set
 # end of NVME Support
 

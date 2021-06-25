@@ -7,7 +7,7 @@ include(`modules/system.docker')dnl
 
 setdef(`__kernel_remote__', `https://github.com/sartura/linux.git')dnl
 setdef(`__kernel_config__', `./config/kernel/tn48m_5.12.y_config')dnl
-setdef(`__kernel_branch__', `delta/tn48m-5.12.9')dnl
+setdef(`__kernel_branch__', `marvell/prestera-5.12.12')dnl
 
 include(`modules/kernel.docker')dnl
 
