@@ -1,0 +1,10 @@
+INTERVAL=10
+DEVPATH=hwmon1=devices/platform/ap806/ap806:config-space@f0000000/f0511000.i2c/i2c-0/0-0040/f0511000.i2c:cpld@40:hwmon hwmon2=devices/platform/cp0/cp0:config-space@f2000000/f2701000.i2c/i2c-1/1-0048
+DEVNAME=hwmon1=f0511000.i2c:cpld@40:hwmon hwmon2=tmp75
+FCTEMPS=hwmon1/pwm1=hwmon2/temp1_input hwmon1/pwm2=hwmon2/temp1_input hwmon1/pwm3=hwmon2/temp1_input hwmon1/pwm4=hwmon2/temp1_input hwmon1/pwm5=hwmon2/temp1_input
+FCFANS=hwmon1/pwm1=hwmon1/fan1_input hwmon1/pwm2=hwmon1/fan2_input hwmon1/pwm3=hwmon1/fan3_input hwmon1/pwm4=hwmon1/fan4_input hwmon1/pwm5=hwmon1/fan5_input
+MINTEMP=hwmon1/pwm1=30 hwmon1/pwm2=30 hwmon1/pwm3=30 hwmon1/pwm4=30 hwmon1/pwm5=30
+MAXTEMP=hwmon1/pwm1=60 hwmon1/pwm2=60 hwmon1/pwm3=60 hwmon1/pwm4=60 hwmon1/pwm5=60
+MINSTART=hwmon1/pwm1=150 hwmon1/pwm2=150 hwmon1/pwm3=150 hwmon1/pwm4=150 hwmon1/pwm5=150
+MINSTOP=hwmon1/pwm1=76 hwmon1/pwm2=76 hwmon1/pwm3=76 hwmon1/pwm4=76 hwmon1/pwm5=76
+MINPWM=hwmon1/pwm1=76 hwmon1/pwm2=76 hwmon1/pwm3=76 hwmon1/pwm4=76 hwmon1/pwm5=76

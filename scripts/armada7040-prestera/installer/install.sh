@@ -39,6 +39,13 @@ umount hdd-disk
 echo "Setting boot environment..."
 
 fw_setenv -f replica_bootargs "root=$INSTALL_PART rw"
+
+[ -z "$(fw_printenv kernel_addr_r 2>/dev/null)" ] && \
+	fw_setenv -f kernel_addr_r $KERNEL_ADDR_R
+
+[ -z "$(fw_printenv fdt_addr_r 2>/dev/null)" ] && \
+	fw_setenv -f fdt_addr_r $FDT_ADDR_R
+
 fw_setenv -f boot_replica "scsi scan; ext4load scsi 0:1 \${kernel_addr_r} $KERNEL; ext4load scsi 0:1 \${fdt_addr_r} $DTB; setenv bootargs \${replica_bootargs}; booti \${kernel_addr_r} - \${fdt_addr_r}"
 fw_setenv -f nos_bootcmd 'run boot_replica'
 
