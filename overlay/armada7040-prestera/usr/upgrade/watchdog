@@ -11,6 +11,7 @@ set_watchdog() {
 
 case "$board" in
 	delta,tn48m|\
+	delta,tn4810m|\
 	edgecore,as5114-48x)
 		set_watchdog 20 60
 		;;

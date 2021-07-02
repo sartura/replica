@@ -3529,6 +3529,12 @@ CONFIG_REMOTEPROC_CDEV=y
 # end of Broadcom SoC drivers
 
 #
+# Delta Networks CPLD debug drivers
+#
+CONFIG_DELTA_CPLDINFO=y
+# end of Delta Networks CPLD debug drivers
+
+#
 # NXP/Freescale QorIQ SoC drivers
 #
 # CONFIG_QUICC_ENGINE is not set
