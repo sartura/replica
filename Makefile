@@ -48,6 +48,12 @@ else
   M4FLAGS += -D__CTARGET__="$(CTARGET)"
 endif
 
+# Target distribution
+#
+ifneq ($(TDISTRO),)
+  M4FLAGS += -D_TDISTRO_="$(TDISTRO)"
+endif
+
 
 # Build options and Docker setup
 #
@@ -90,13 +96,24 @@ endif
 ifneq ($(KERNEL_REMOTE),)
   M4FLAGS += -D__kernel_remote__="$(KERNEL_REMOTE)"
 endif
-
 ifneq ($(KERNEL_BRANCH),)
   M4FLAGS += -D__kernel_branch__="$(KERNEL_BRANCH)"
 endif
-
 ifneq ($(KERNEL_CONFIG),)
   M4FLAGS += -D__kernel_config__="$(KERNEL_CONFIG)"
+endif
+
+ifneq ($(DEBOOTSTRAP_RELEASE),)
+  M4FLAGS += -D__debootstrap_release__="$(DEBOOTSTRAP_RELEASE)"
+endif
+ifneq ($(DEBOOTSTRAP_URL),)
+  M4FLAGS += -D__debootstrap_url__="$(DEBOOTSTRAP_URL)"
+endif
+ifneq ($(DEBOOTSTRAP_INCLUDE),)
+  M4FLAGS += -D__debootstrap_include__="$(DEBOOTSTRAP_INCLUDE)"
+endif
+ifneq ($(DEBOOTSTRAP_EXCLUDE),)
+  M4FLAGS += -D__debootstrap_exclude__="$(DEBOOTSTRAP_EXCLUDE)"
 endif
 
 ifneq ($(WITH_ROOTFS),)

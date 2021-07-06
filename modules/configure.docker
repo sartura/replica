@@ -17,7 +17,7 @@ RUN \
     sed -i "s,/bin/bash,__configure_shell__," ${SYSROOT}/etc/passwd && \
     # NOTE: This sets default root password to "replica"
     sed -i "s/root:\*:/root\:\$6\$MIf334fS6fTaKihG\$FAoUg\.iIq0WSq\.zZ\.UZ70HrACKRkv9ZGBucyOsXk8hZpqCbkfdo7x\/UVhq7L5Lzd5HTNINQTCcAXttuqSBe070:/" \
-    ${SYSROOT}/etc/shadow && \
+        ${SYSROOT}/etc/shadow && \
     # Create localtime file to default to UTC timezone.
     # Otherwise boot will be stopped until timezone is selected.
     touch ${SYSROOT}/etc/localtime && \

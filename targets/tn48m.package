@@ -17,9 +17,9 @@ TDEVICE=delta-${BTARGET}
 ODIR=/output
 OTMP=$(mktemp -d)
 ONIETMP=$(mktemp -d)
-OTAR="gentoo-${TPARCH}-${TDEVICE}-rootfs.tar.gz"
+OTAR="${TDISTRO}-${TPARCH}-${TDEVICE}-rootfs.tar.gz"
 OTAR_FULL="${ODIR}/${OTAR}"
-OIMG="${ODIR}/gentoo-${TPARCH}-${TDEVICE}-onie.img"
+OIMG="${ODIR}/${TDISTRO}-${TPARCH}-${TDEVICE}-onie.img"
 dtb_file=armada-7040-tn48m.dtb
 OROOTFS=${WITH_ROOTFS:-0}
 export XZ_OPT="-2 -T0" # multithreaded
@@ -31,7 +31,9 @@ if [[ ! -d ${ODIR} ]]; then
 fi
 
 # This file contains various data about installed packages, depgraph, etc.
-mv ${SYSROOT}/sysdesc ${ODIR}/sysdesc-${TPARCH}-${TDEVICE}.txt
+if [[ -f ${SYSROOT}/sysdesc ]]; then
+    mv ${SYSROOT}/sysdesc ${ODIR}/sysdesc-${TPARCH}-${TDEVICE}.txt
+fi
 
 # The kernel will be packaged outside of the root filesystem
 mv ${SYSROOT}/boot ${OTMP}/kernel

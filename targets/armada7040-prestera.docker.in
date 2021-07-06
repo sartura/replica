@@ -3,7 +3,15 @@ dnl
 dnl Copyright (c) 2021 Sartura Ltd.
 dnl
 include(`modules/base.docker')dnl
+
+setdef(`_TDISTRO_', `gentoo')dnl
+
+ifelse(index(_TDISTRO_, `gentoo'),0,`dnl
 include(`modules/system.docker')dnl
+')dnl
+
+setdef(`__debootstrap_release__', `stable')dnl
+setdef(`__debootstrap_url__',     `http://deb.debian.org/debian/')dnl
 
 setdef(`__kernel_remote__', `https://github.com/sartura/linux.git')dnl
 setdef(`__kernel_config__', `./config/kernel/armada7040-prestera_5.12.y_config')dnl
@@ -11,7 +19,8 @@ setdef(`__kernel_branch__', `marvell/prestera-5.12.12')dnl
 
 include(`modules/kernel.docker')dnl
 
-# Switch to target-specific Gentoo profile and update installation
+# Install target architecture packages
+ifelse(index(_TDISTRO_, `gentoo'),0,`dnl
 COPY ./repos/replica /var/db/repos/replica
 COPY ./config/portage         ${SYSROOT}/etc/portage
 RUN __renv__ __rdistfiles__ __rccache__ \
@@ -22,6 +31,29 @@ RUN __renv__ __rdistfiles__ __rccache__ \
 dnl # Common snippets to clean and configure system
 include(`modules/cleanup.docker')dnl
 include(`modules/configure.docker')dnl
+')dnl
+
+ifelse(index(_TDISTRO_, `debian'),0,`dnl
+RUN __renv__ __rdistfiles__ __rccache__ \
+    mv ${SYSROOT}/boot          /usr/src/boot && \
+    mv ${SYSROOT}/lib/modules   /usr/src/modules && \
+    rm -rf                      ${SYSROOT}/* && \
+    debootstrap \
+        --arch=${TPARCH} \
+        --no-merged-usr \
+        --cache-dir=/var/cache/distfiles \
+ifdef(`__debootstrap_include__', `dnl
+        --include="gpg,dirmngr,debian-keyring,fancontrol,__debootstrap_include__" \
+')dnl
+ifdef(`__debootstrap_exclude__', `dnl
+        --exclude="__debootstrap_exclude__" \
+')dnl
+        "__debootstrap_release__" ${SYSROOT} "__debootstrap_url__" && \
+    sed -i "s/root:\*:/root\:\$6\$MIf334fS6fTaKihG\$FAoUg\.iIq0WSq\.zZ\.UZ70HrACKRkv9ZGBucyOsXk8hZpqCbkfdo7x\/UVhq7L5Lzd5HTNINQTCcAXttuqSBe070:/" \
+        ${SYSROOT}/etc/shadow && \
+    mv -f /usr/src/boot         ${SYSROOT}/ && \
+    mv -f /usr/src/modules      ${SYSROOT}/lib/ || ( cat ${SYSROOT}/debootstrap/debootstrap.log; exit 1 )
+')dnl
 
 # Target-specific filesystem cleanup and configuration
 RUN \
@@ -42,3 +74,4 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 
 # Inject target variable into the environment
 ENV BTARGET=_BTARGET_
+ENV TDISTRO=_TDISTRO_

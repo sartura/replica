@@ -16,6 +16,7 @@ RUN __renv__ \
     git clone --depth=1 --branch "__kernel_branch__" __kernel_remote__ \
         /usr/src/linux && rm -rf /usr/src/linux/.git && \
     # NOTE: Portage requires a reference directory
+    mkdir -p ${SYSROOT}/usr/src && \
     ln -sf /usr/src/linux ${SYSROOT}/usr/src/linux
 
 # Configure, build, and install the kernel
