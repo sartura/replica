@@ -66,10 +66,10 @@ if [ -n "${DTB}" ]; then
 			type = \"flat_dt\";
 			arch = \"${ARCH}\";
 			compression = \"none\";
-			hash@1 {
+			hash-1 {
 				algo = \"crc32\";
 			};
-			hash@2 {
+			hash-2 {
 				algo = \"sha1\";
 			};
 		};
@@ -94,10 +94,10 @@ DATA="/dts-v1/;
 			compression = \"${COMPRESS}\";
 			load = <${LOAD_ADDR}>;
 			entry = <${ENTRY_ADDR}>;
-			hash@1 {
+			hash-1 {
 				algo = \"crc32\";
 			};
-			hash@2 {
+			hash-2 {
 				algo = \"sha1\";
 			};
 		};
