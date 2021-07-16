@@ -52,6 +52,7 @@ FIRMWARE=upgrade.tar
 case "$board" in
 	delta,tn48m|\
 	delta,tn4810m|\
+	delta,tx4810|\
 	edgecore,as5114-48x)
 		do_upgrade "/dev/sda" "/dev/sda1"
 		;;

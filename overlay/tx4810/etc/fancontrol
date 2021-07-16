@@ -1,0 +1,10 @@
+INTERVAL=10
+DEVPATH=hwmon1=devices/platform/cp0/cp0:config-space@f2000000/f2701000.i2c/i2c-1/1-002e
+DEVNAME=hwmon1=adt7473
+FCTEMPS=hwmon1/pwm3=hwmon1/temp2_input hwmon1/pwm2=hwmon1/temp2_input hwmon1/pwm1=hwmon1/temp2_input
+FCFANS=hwmon1/pwm3=hwmon1/fan3_input hwmon1/pwm2=hwmon1/fan2_input hwmon1/pwm1=hwmon1/fan1_input
+MINTEMP=hwmon1/pwm3=20 hwmon1/pwm2=20 hwmon1/pwm1=20
+MAXTEMP=hwmon1/pwm3=55 hwmon1/pwm2=55 hwmon1/pwm1=55
+MINSTART=hwmon1/pwm3=150 hwmon1/pwm2=150 hwmon1/pwm1=150
+MINSTOP=hwmon1/pwm3=0 hwmon1/pwm2=0 hwmon1/pwm1=0
+MAXPWM=hwmon1/pwm3=255

@@ -1,2 +1,5 @@
 SUBSYSTEM=="net", ACTION=="add", ATTR{phys_port_name}!="", \
 NAME="sw$attr{phys_switch_id}$attr{phys_port_name}"
+
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="mlxsw_spectrum*", \
+NAME="sw$attr{phys_port_name}"

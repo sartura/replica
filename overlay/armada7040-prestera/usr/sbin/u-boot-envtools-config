@@ -42,6 +42,7 @@ env_configure() {
 case "$board" in
 	delta,tn48m|\
 	delta,tn4810m|\
+	delta,tx4810|\
 	edgecore,as5114-48x)
 		env_configure "u-boot-env" "0x0" "0x10000" "0x10000"
 		;;

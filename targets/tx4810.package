@@ -1,0 +1,76 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+source /etc/profile
+
+set -e
+set -u
+shopt -s nullglob
+
+# Target variables
+TDEVICE=delta-${BTARGET}
+
+# Output variables
+ODIR=/output
+OTMP=$(mktemp -d)
+ONIETMP=$(mktemp -d)
+OTAR="gentoo-${TPARCH}-${TDEVICE}-rootfs.tar.gz"
+OTAR_FULL="${ODIR}/${OTAR}"
+OIMG="${ODIR}/gentoo-${TPARCH}-${TDEVICE}-onie.img"
+dtb_file=armada-7040-tx4810.dtb
+OROOTFS=${WITH_ROOTFS:-0}
+export XZ_OPT="-2 -T0" # multithreaded
+
+# Check whether the output directory exists
+if [[ ! -d ${ODIR} ]]; then
+	echo "docker-entrypoint: output directory does not exist!"
+	exit 1
+fi
+
+# This file contains various data about installed packages, depgraph, etc.
+mv ${SYSROOT}/sysdesc ${ODIR}/sysdesc-${TPARCH}-${TDEVICE}.txt
+
+# The kernel will be packaged outside of the root filesystem
+mv ${SYSROOT}/boot ${OTMP}/kernel
+
+mkdir -p ${SYSROOT}/boot
+cp ${OTMP}/kernel/Image ${SYSROOT}/boot
+cp ${OTMP}/kernel/dtbs/marvell/${dtb_file} ${SYSROOT}/boot
+
+#Generate a Gzipped TAR rootfs archive
+tar -cpzf ${OTAR_FULL} -C ${SYSROOT} .
+
+#Generate a ONIE compatible installer
+SHARC_BODY="/usr/local/bin/sharch_body.sh"
+INSTALLER="/usr/local/bin/installer/install.sh"
+ONIE_CONFIG="${OTMP}/onie.conf"
+
+echo "MACHINE=delta_tx4810" >> ${ONIE_CONFIG}
+echo "ARCH=arm64" >> ${ONIE_CONFIG}
+echo "INSTALL_DISK=/dev/sda" >> ${ONIE_CONFIG}
+echo "INSTALL_FS=ext4" >> ${ONIE_CONFIG}
+echo "ROOTFS_ARCHIVE=${OTAR}" >> ${ONIE_CONFIG}
+echo "INSTALL_PART=/dev/sda1" >> ${ONIE_CONFIG}
+echo "KERNEL=boot/Image" >> ${ONIE_CONFIG}
+echo "DTB=boot/${dtb_file}" >> ${ONIE_CONFIG}
+
+/usr/local/bin/generator.sh \
+	${ONIETMP} \
+	${OTAR_FULL} \
+	${SHARC_BODY} \
+	${INSTALLER} \
+	${ONIE_CONFIG} \
+	${OIMG}
+
+if (( OROOTFS )); then
+	# Package the root filesystem as a compressed archive
+	# NOTE: We use `.` to specify contents of the current (SYSROOT) directory.
+	OTAR_FULL="${ODIR}/rootfs-${TPARCH}-${TDEVICE}.tar.xz"
+	tar --directory=${SYSROOT} --totals --create --xz --file ${OTAR_FULL} .
+fi
+
+# Flush cached writes
+sync
