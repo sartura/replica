@@ -1,0 +1,6 @@
+[Match]
+Name=enp0s20f0
+
+[Network]
+DHCP=yes
+DNSSEC=no
