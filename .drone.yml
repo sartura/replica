@@ -10,17 +10,20 @@ steps:
   - name: submodules
     commands:
       - git submodule update --init --recursive --depth 25
-      - export TEST=thisisabsolutelyatest
 
-  - name: arm:toolchain:master
+  - name: arm64:rpi4
     commands:
-      # - make CTARGET=armv7a-unknown-linux-gnueabihf package_toolchain
-      - env
+      - make CTARGET=aarch64-unknown-linux-gnu package_rpi4
+    
   - name: arm64:toolchain:master
     commands:
       # - make CTARGET=aarch64-unknown-linux-gnu package_toolchain
-      - env
+      - echo "test"
   - name: amd64:toolchain:master
     commands:
       # - make CTARGET=x86_64-multilib-linux-gnu package_toolchain
-      - env
+
+  - name: package
+    commands:
+      - make GENTOO_MIRRORS="http://mirror.netcologne.de/gentoo/" PACKAGE="sys-apps/ethtool" package_package
+    
