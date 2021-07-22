@@ -1,0 +1,26 @@
+---
+kind: pipeline
+type: exec
+name: default
+
+clone:
+  depth: 25
+
+steps:
+  - name: submodules
+    commands:
+      - git submodule update --init --recursive --depth 25
+      - export TEST=thisisabsolutelyatest
+
+  - name: arm:toolchain:master
+    commands:
+      # - make CTARGET=armv7a-unknown-linux-gnueabihf package_toolchain
+      - env
+  - name: arm64:toolchain:master
+    commands:
+      # - make CTARGET=aarch64-unknown-linux-gnu package_toolchain
+      - env
+  - name: amd64:toolchain:master
+    commands:
+      # - make CTARGET=x86_64-multilib-linux-gnu package_toolchain
+      - env
