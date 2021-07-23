@@ -11,6 +11,31 @@ steps:
     commands:
       - git submodule update --init --recursive --depth 25
   
+   # Package targets
+  - name: arm:package:master
+    commands:
+      - make V=1 J=$(($(nproc) + 1)) CTARGET=armv7a-unknown-linux-gnueabihf PACKAGE="sys-apps/ethtool" package_package
+
+  - name: arm64:package:master
+    commands:
+      - make V=1 J=$(($(nproc) + 1)) CTARGET=aarch64-unknown-linux-gnu PACKAGE="sys-apps/ethtool" package_package
+
+  - name: amd64:package:master
+    commands:
+      - make V=1 J=$(($(nproc) + 1)) CTARGET=x86_64-multilib-linux-gnu PACKAGE="sys-apps/ethtool" package_package
+
+  - name: arm-musl:package:master
+    commands:
+      - make V=1 J=$(($(nproc) + 1)) CTARGET=armv7a-unknown-linux-musleabihf PACKAGE="sys-apps/ethtool" package_package
+
+  - name: arm64-musl:package:master
+    commands:
+      - make V=1 J=$(($(nproc) + 1)) CTARGET=aarch64-unknown-linux-musl PACKAGE="sys-apps/ethtool" package_package
+
+  - name: amd64-musl:package:master
+    commands:
+      - make V=1 J=$(($(nproc) + 1)) CTARGET=x86_64-multilib-linux-musl PACKAGE="sys-apps/ethtool" package_package
+      
   # Toolchain targets
   - name: arm:toolchain:master
     commands:
@@ -95,27 +120,4 @@ steps:
     commands:
       - make V=1 J=$(($(nproc) + 1)) CTARGET=x86_64-multilib-linux-musl package_system
 
-  # Package targets
-  - name: arm:package:master
-    commands:
-      - make V=1 J=$(($(nproc) + 1)) CTARGET=armv7a-unknown-linux-gnueabihf PACKAGE="sys-apps/ethtool" package_package
-
-  - name: arm64:package:master
-    commands:
-      - make V=1 J=$(($(nproc) + 1)) CTARGET=aarch64-unknown-linux-gnu PACKAGE="sys-apps/ethtool" package_package
-
-  - name: amd64:package:master
-    commands:
-      - make V=1 J=$(($(nproc) + 1)) CTARGET=x86_64-multilib-linux-gnu PACKAGE="sys-apps/ethtool" package_package
-
-  - name: arm-musl:package:master
-    commands:
-      - make V=1 J=$(($(nproc) + 1)) CTARGET=armv7a-unknown-linux-musleabihf PACKAGE="sys-apps/ethtool" package_package
-
-  - name: arm64-musl:package:master
-    commands:
-      - make V=1 J=$(($(nproc) + 1)) CTARGET=aarch64-unknown-linux-musl PACKAGE="sys-apps/ethtool" package_package
-
-  - name: amd64-musl:package:master
-    commands:
-      - make V=1 J=$(($(nproc) + 1)) CTARGET=x86_64-multilib-linux-musl PACKAGE="sys-apps/ethtool" package_package
+ 
