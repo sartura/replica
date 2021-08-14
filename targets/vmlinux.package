@@ -33,7 +33,7 @@ fi
 bpftool btf dump file ${VMLINUX} format c | dd of=${ODIR}/vmlinux-${TPARCH}.h
 
 # The kernel image is massive, compress and install it
-xz --compress ${VMLINUX}
+xz --force --compress ${VMLINUX}
 install -m644 ${VMLINUX}.xz ${ODIR}/vmlinux-${TPARCH}.elf.xz
 
 # Flush cached writes

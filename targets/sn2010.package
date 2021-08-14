@@ -116,4 +116,4 @@ chown ${OWNER} -R ${ODIR}
 sync && kpartx -dv ${ODEV} && losetup -vd ${ODEV}
 
 # Compress resulting raw disk image
-xz --compress ${OIMG}
+xz --force --compress ${OIMG}

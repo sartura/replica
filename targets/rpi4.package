@@ -92,4 +92,4 @@ fi
 sync && kpartx -dv ${ODEV} && losetup -d ${ODEV}
 
 # Compress resulting raw disk image
-xz --compress ${OIMG}
+xz --force --compress ${OIMG}
