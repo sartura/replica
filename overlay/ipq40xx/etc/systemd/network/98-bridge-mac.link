@@ -1,0 +1,5 @@
+[Match]
+Type=bridge
+
+[Link]
+MACAddressPolicy=none

@@ -1,0 +1,10 @@
+[Unit]
+Description=Extract Wi-Fi calibration data
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/wifi-cal
+
+[Install]
+WantedBy=sysinit.target

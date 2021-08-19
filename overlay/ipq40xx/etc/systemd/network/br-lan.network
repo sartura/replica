@@ -1,0 +1,6 @@
+[Match]
+Name=br-lan
+
+[Network]
+DNSSEC=no
+DHCP=yes

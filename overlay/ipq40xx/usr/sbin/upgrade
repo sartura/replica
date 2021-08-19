@@ -1,0 +1,20 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+FIRMWARE=$1
+
+if [ -n "$FIRMWARE" ]; then
+	echo "Fetching firmware from: $FIRMWARE"
+	wget $1 -O /tmp/upgrade.img
+	if [ $? -ne 0 ]; then
+		echo "Failed to fetch firmware!"
+		exit 1
+	fi
+fi
+
+echo "Starting system firmware upgrade"
+
+systemctl start upgrade.service

@@ -1,0 +1,10 @@
+[Unit]
+Description=U-Boot environment configuration service
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/u-boot-envtools-config
+
+[Install]
+WantedBy=multi-user.target

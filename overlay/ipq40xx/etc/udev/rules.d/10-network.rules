@@ -1,0 +1,3 @@
+# Force persistent Wi-Fi radio names
+SUBSYSTEM=="net", DEVPATH=="/devices/platform/soc/a000000.*", NAME="wl24g"
+SUBSYSTEM=="net", DEVPATH=="/devices/platform/soc/a800000.*", NAME="wl5g"

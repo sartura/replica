@@ -1,0 +1,2 @@
+# Enable U-Boot environment configuration service
+enable u-boot-envtools-config.service

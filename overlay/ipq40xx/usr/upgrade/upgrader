@@ -1,0 +1,106 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+set -e
+
+# Script for updating in the minimal BusyBox upgrade environment
+
+board=$(strings /proc/device-tree/compatible | head -1)
+
+error_die() {
+	echo "Error: " "$*"
+	exit 1
+}
+
+find_mtd_index() {
+	local PART="$(grep "\"$1\"" /proc/mtd | awk -F: '{print $1}')"
+	local INDEX="${PART##mtd}"
+
+	echo ${INDEX}
+}
+
+find_mtd_part() {
+	local INDEX=$(find_mtd_index "$1")
+	local PREFIX=/dev/mtdblock
+
+	[ -d /dev/mtdblock ] && PREFIX=/dev/mtdblock/
+	echo "${INDEX:+$PREFIX$INDEX}"
+}
+
+find_mtd_chardev() {
+	local INDEX=$(find_mtd_index "$1")
+	local PREFIX=/dev/mtd
+
+	[ -d /dev/mtd ] && PREFIX=/dev/mtd/
+	echo "${INDEX:+$PREFIX$INDEX}"
+}
+
+ubi_detach() {
+	local mtd=$1
+
+	/sbin/ubidetach -p $mtd || error_die "UBI detach failed for $mtd"
+}
+
+ubi_format() {
+	local mtd=$1
+
+	/sbin/ubiformat $mtd -y -f $FIRMWARE
+}
+
+do_upgrade() {
+	local upgrade_part=$1
+	local detach_part=$2
+	local mtd_upgrade
+	local mtd_detach
+
+	echo "Running system upgrade for $board"
+
+	mtd_upgrade=$(find_mtd_chardev $upgrade_part)
+	[ -n "$mtd_upgrade" ] || error_die "no mtd device found for partition $upgrade_part"
+
+	[ -f "$FIRMWARE" ] || error_die "no firmware found for filename $FIRMWARE"
+
+	if [ -z "$detach_part" ]; then
+		mtd_detach=$mtd_upgrade
+	else
+		mtd_detach=$(find_mtd_chardev $detach_part)
+		[ -n "$mtd_detach" ] || error_die "no mtd device found for partition $detach_part"
+	fi
+
+	# Ensure that kernel has had time to unmount rootfs
+	echo "Sleeping for 10 secunds to ensure safe partition detach"
+	sleep 10s
+
+	echo "Detaching partition: $mtd_detach"
+	ubi_detach $mtd_detach
+
+	# We need to ignore the ubiformat exit code, as it always returns 1
+	echo "Flashing the upgrade image to: $mtd_upgrade"
+	ubi_format $mtd_upgrade || true
+
+	echo "Rebooting the system now!"
+	sleep 2s #Ensure that its actually printed
+
+	reboot
+}
+
+FIRMWARE=upgrade.img
+case "$board" in
+	edgecore,ecw5211-l-t)
+	active=$(fw_printenv -n active)
+	if [ "$active" = "1" ]; then
+		fw_setenv active 2 || exit 1
+		do_upgrade "ubi2" "ubi1"
+	else
+		fw_setenv active 1 || exit 1
+		do_upgrade "ubi1" "ubi2"
+	fi
+		;;
+	*)
+		echo "Unsupported board:" $board
+		exit 1
+	;;
+esac

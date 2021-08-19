@@ -1,0 +1,2 @@
+# Enable Wi-Fi calibration data extraction service
+enable wifi-cal.service
