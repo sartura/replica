@@ -1,4 +1,4 @@
-From 066f0e8ce59930908b836cc4a1911d09cc827ea9 Mon Sep 17 00:00:00 2001
+From 3c99ceda73462c218a2dd4e2cadbf07814526254 Mon Sep 17 00:00:00 2001
 From: Matt Redfearn <matt.redfearn@mips.com>
 Date: Wed, 3 Jan 2018 09:57:30 +0000
 Subject: [PATCH 3/3] include/uapi/linux/swab: Fix potentially missing

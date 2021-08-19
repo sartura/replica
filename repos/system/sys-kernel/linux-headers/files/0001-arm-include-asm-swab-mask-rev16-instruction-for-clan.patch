@@ -1,4 +1,4 @@
-From 50d6f0b7f7569a65be1b44930d028697d682888b Mon Sep 17 00:00:00 2001
+From 09adcca9d548418cc1b5b171b85298d84fd2c2d0 Mon Sep 17 00:00:00 2001
 From: Ivan Khoronzhuk <ivan.khoronzhuk@linaro.org>
 Date: Fri, 30 Aug 2019 03:50:36 +0300
 Subject: [PATCH 1/3] arm: include: asm: swab: mask rev16 instruction for clang

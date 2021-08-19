@@ -1,4 +1,4 @@
-From 0583544edb37aa010a1fc0e47758f66644d4f130 Mon Sep 17 00:00:00 2001
+From a15dbe71c9b7a24f32c4d11fc01504af12082e46 Mon Sep 17 00:00:00 2001
 From: Ivan Khoronzhuk <ivan.khoronzhuk@linaro.org>
 Date: Fri, 30 Aug 2019 03:50:37 +0300
 Subject: [PATCH 2/3] arm: include: asm: unified: mask .syntax unified for

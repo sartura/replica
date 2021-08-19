@@ -4,5 +4,5 @@
 #
 
 # eBPF related packages fail to build on ARM64 architecture
->sys-kernel/linux-headers-5.8
-<sys-kernel/linux-headers-5.8
+>sys-kernel/linux-headers-5.11
+<sys-kernel/linux-headers-5.11

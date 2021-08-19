@@ -10,18 +10,15 @@ detect_version
 
 PATCH_PV=${PV} # to ease testing new versions against not existing patches
 PATCH_VER="1"
-SRC_URI="${KERNEL_URI}
-	${PATCH_VER:+mirror://gentoo/gentoo-headers-${PATCH_PV}-${PATCH_VER}.tar.xz}
-	${PATCH_VER:+https://dev.gentoo.org/~slyfox/distfiles/gentoo-headers-${PATCH_PV}-${PATCH_VER}.tar.xz}
-"
+SRC_URI="https://git.kernel.org/torvalds/t/linux-5.11-rc2.tar.gz"
 
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux"
+KEYWORDS="~alpha amd64 arm arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux"
 
 DEPEND="app-arch/xz-utils
 	dev-lang/perl"
 RDEPEND=""
 
-S=${WORKDIR}/linux-${PV}
+S=${WORKDIR}/linux-${PV}-rc2
 
 src_unpack() {
 	unpack ${A}
@@ -29,7 +26,6 @@ src_unpack() {
 
 src_prepare() {
 	eapply "${FILESDIR}"/*.patch
-	[[ -n ${PATCH_VER} ]] && eapply "${WORKDIR}"/${PATCH_PV}/*.patch
 
 	default
 }
