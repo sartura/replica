@@ -1,0 +1,209 @@
+---
+kind: pipeline
+type: exec
+name: replica.one
+
+clone:
+  depth: 25
+
+steps:
+  - name: submodules
+    commands:
+      - git submodule update --init --recursive --depth 25
+
+  - name: makeDirectoryStructure
+    commands:
+      - echo $${DRONE_BRANCH} | iconv -t ascii//TRANSLIT | sed -r s/[~\^]+//g | sed -r s/[^a-zA-Z0-9]+/-/g | sed -r s/^-+\|-+$//g | tr A-Z a-z > branchName
+      - mkdir $(cat branchName)
+      - date '+%Y-%m-%d' > dateDirectory
+
+# Build templates
+  - name: buildTemplate
+    nodeinfo: &buildTemplate
+      environment:
+        CTARGET: architecture
+        target: target
+      commands:
+        - make V=1 J=$(($(nproc) + 1)) package_$${target}
+        - mkdir -p ./$(cat branchName)/$${target}/$(cat dateDirectory)
+        - mv ./output/* ./$(cat branchName)/$${target}/$(cat dateDirectory)
+   
+  - name: buildTemplateNoOutput
+    nodeinfo: &buildTemplateNoOutput
+      environment:
+        CTARGET: architecture
+        target: target
+      commands:
+        - make V=1 J=$(($(nproc) + 1)) package_$${target}
+
+
+# Toolchain targets
+  - name: arm:toolchain
+    <<: *buildTemplate
+    environment:
+      CTARGET: armv7a-unknown-linux-gnueabihf
+      target: toolchain
+
+  - name: arm64:toolchain
+    <<: *buildTemplate
+    environment:
+      CTARGET: aarch64-unknown-linux-gnu
+      target: toolchain
+
+  - name: amd64:toolchain
+    <<: *buildTemplate
+    environment:
+      CTARGET: x86_64-multilib-linux-gnu
+      target: toolchain
+  
+  - name: arm-musl:toolchain
+    <<: *buildTemplate
+    environment:
+      CTARGET: armv7a-unknown-linux-musleabihf
+      target: toolchain
+   
+  - name: arm64-musl:toolchain
+    <<: *buildTemplate
+    environment:
+      CTARGET: aarch64-unknown-linux-musl
+      target: toolchain
+
+  - name: amd64-musl:toolchain
+    <<: *buildTemplate
+    environment:
+      CTARGET: x86_64-multilib-linux-musl
+      target: toolchain
+  
+
+# Device targets
+  - name: arm64:tn48m
+    <<: *buildTemplate
+    environment:
+      CTARGET: aarch64-unknown-linux-gnu
+      target: tn48m
+    
+  - name: arm64:tn4810m
+    <<: *buildTemplate
+    environment:
+      CTARGET: aarch64-unknown-linux-gnu
+      target: tn4810m
+
+  - name: arm64:tx4810
+    <<: *buildTemplate
+    environment:
+      CTARGET: aarch64-unknown-linux-gnu
+      target: tx4810
+
+  - name: arm64:as5114-48x
+    <<: *buildTemplate
+    environment:
+      CTARGET: aarch64-unknown-linux-gnu
+      target: as5114-48x
+
+  - name: arm64:rpi4
+    <<: *buildTemplate
+    environment:
+      CTARGET: aarch64-unknown-linux-gnu
+      target: rpi4
+
+  - name: amd64:sn2010
+    <<: *buildTemplate
+    environment:
+      CTARGET: x86_64-multilib-linux-gnu
+      target: sn2010
+
+  - name: arm:ecw5211-l-t
+    <<: *buildTemplate
+    environment:
+      CTARGET: armv7a-unknown-linux-gnueabihf
+      target: ecw5211-l-t
+  
+
+# Generic targets
+  - name: arm:vmlinux
+    <<: *buildTemplate
+    environment:
+      CTARGET: armv7a-unknown-linux-gnueabihf
+      target: vmlinux
+
+  - name: arm64:vmlinux
+    <<: *buildTemplate
+    environment:
+      CTARGET: aarch64-unknown-linux-gnu
+      target: vmlinux
+
+  - name: amd64:vmlinux
+    <<: *buildTemplate
+    environment:
+      CTARGET: x86_64-multilib-linux-gnu
+      target: vmlinux
+
+
+# System targets
+  - name: arm:system
+    <<: *buildTemplateNoOutput
+    environment:
+      CTARGET: armv7a-unknown-linux-gnueabihf
+      target: system
+
+  - name: arm64:system
+    <<: *buildTemplateNoOutput
+    environment:
+      CTARGET: aarch64-unknown-linux-gnu
+      target: system
+
+  - name: amd64:system
+    <<: *buildTemplateNoOutput
+    environment:
+      CTARGET: x86_64-multilib-linux-gnu
+      target: system
+
+  - name: arm-musl:system
+    <<: *buildTemplateNoOutput
+    environment:
+      CTARGET: armv7a-unknown-linux-musleabihf
+      target: system
+
+  - name: arm64-musl:system
+    <<: *buildTemplateNoOutput
+    environment:
+      CTARGET: aarch64-unknown-linux-musl
+      target: system
+
+  - name: amd64-musl:system
+    <<: *buildTemplateNoOutput
+    environment:
+      CTARGET: x86_64-multilib-linux-musl
+      target: system
+
+
+# Package targets 
+  - name: arm64:package
+    <<: *buildTemplate
+    environment:
+      CTARGET: aarch64-unknown-linux-gnu
+      target: package
+      PACKAGE: "sys-apps/ethtool"
+
+ 
+# File transfer 
+  - name: transferArtifacts
+    environment:
+      DRONE_USER:
+        from_secret: droneUser
+      DRONE_PASSWORD:
+        from_secret: dronePassword
+      DRONE_SERVER:
+        from_secret: droneServer
+      DRONE_DIRECTORY_PATH:
+        from_secret: droneDirectoryPath
+    commands:
+      - echo -e $${DRONE_PASSWORD} | openssl base64 -A -d > ./key
+      - chmod 600 ./key
+      - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentityFile=./key -r $(cat branchName) $${DRONE_USER}@$${DRONE_SERVER}:$${DRONE_DIRECTORY_PATH}
+
+---
+kind: signature
+hmac: 04820dc500773ea743a245433ca735be7e794d46498655a7b010d07d4c4d06a7
+
+...
