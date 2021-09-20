@@ -11,6 +11,9 @@
 *sys-devel/crossdev
 *sys-kernel/genkernel
 
+# cross-distribution tooling
+*dev-util/debootstrap
+
 # packaging tools
 *dev-embedded/u-boot-tools
 *sys-fs/mtd-utils
