@@ -1,0 +1,24 @@
+dnl SPDX-License-Identifier: MIT
+dnl
+dnl Copyright (c) 2021 Sartura Ltd.
+dnl
+dnl # These variables should be defined by the target.
+ifdef(`__uboot_branch__',,`m4exit(1)')dnl
+ifdef(`__uboot_remote__',,`m4exit(1)')dnl
+
+dnl # Local defaults
+
+setdef(`__uboot_config__', `_BTARGET_`'_defconfig')dnl
+
+# Download and prepare U-Boot sources for this target
+RUN __renv__ \
+    git clone --depth=1 --branch "__uboot_branch__" __uboot_remote__ \
+        /usr/src/u-boot && rm -rf /usr/src/u-boot/.git
+
+# Configure, build, and install the bootloader
+RUN __renv__ __rccache__ \
+    cd /usr/src/u-boot && \
+    export ARCH=${TKARCH} CROSS_COMPILE="${CTARGET}-" && \
+    make ${MAKEOPTS} __uboot_config__ && \
+    make ${MAKEOPTS} && ${CTARGET}-strip ./u-boot && \
+    install ./u-boot{,.bin,.map} -m644 ${SYSROOT}/boot

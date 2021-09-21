@@ -1,0 +1,85 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+source /etc/profile
+
+set -e
+set -u
+shopt -s nullglob
+
+# Target variables
+TDEVICE=mvebu-${BTARGET}
+
+# Output variables
+ODIR=/output
+OIMG="${ODIR}/gentoo-${TPARCH}-${TDEVICE}.img"
+OFILE=""
+OROOTFS=${WITH_ROOTFS:-0}
+export XZ_OPT="-2 -T0" # multithreaded
+
+# Check whether the output directory exists
+if [[ ! -d ${ODIR} ]]; then
+	echo "docker-entrypoint: output directory does not exist!"
+	exit 1
+fi
+
+# This file contains various data about installed packages, depgraph, etc.
+mv ${SYSROOT}/sysdesc ${ODIR}/sysdesc-${TPARCH}-${TDEVICE}.txt
+
+# Generate and partition a relatively large image
+# TODO: Research a better way to do this, without wasted space and large files.
+fallocate -l 1024M ${OIMG}
+sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${OIMG}
+  g # clear the in memory partition table, create GPT part table
+  n # new partition
+  1 # partition number 1
+    # start at a default offset
+    # default, extend partition to end of disk
+  p # print the in-memory partition table
+  w # write the partition table
+  q # done
+EOF
+
+# Setup the image file as a loopback device for formatting
+# NOTE: Using `--partscan` here would register only in the default namespace.
+if ! ODEV=$(losetup --show --find ${OIMG}); then
+	echo "docker-entrypoint: unable to setup a loopback device!"
+	exit 1
+elif ! kpartx -usv ${ODEV}; then
+	echo "docker-entrypoint: unable to update partition mappings!"
+	exit 1
+fi
+
+MDIR=$(mktemp -d)
+ODEVN=$(basename ${ODEV})
+
+mkfs.ext4 -F /dev/mapper/${ODEVN}p1
+mount /dev/mapper/${ODEVN}p1 ${MDIR}
+	# Package the root filesystem
+	rsync --archive --hard-links --info=progress2 ${SYSROOT}/. ${MDIR}
+
+	# Generate boot script
+	mkimage -A ${TPARCH} -O linux -T script -C none -a 0 -e 0 \
+		-n 'U-Boot Board Boot' \
+		-d ${MDIR}/boot/boot.cmd \
+		${MDIR}/boot/boot.scr
+
+	# Package generated ATF binaries
+	mv -f ${MDIR}/boot/flash-image.bin ${ODIR}/atf-flash-${TPARCH}-${TDEVICE}.bin
+umount ${MDIR}
+
+if (( OROOTFS )); then
+	# Package the root filesystem as a compressed archive
+	# NOTE: We use `.` to specify contents of the current (SYSROOT) directory.
+	OFILE="${ODIR}/rootfs-${TPARCH}-${TDEVICE}.tar.xz"
+	tar --directory=${SYSROOT} --totals --create --xz --file ${OFILE} .
+fi
+
+# Flush cached writes, remove devices
+sync && kpartx -dv ${ODEV} && losetup -d ${ODEV}
+
+# Compress resulting raw disk image
+xz --compress ${OIMG}

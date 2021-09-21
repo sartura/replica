@@ -118,6 +118,12 @@ steps:
       CTARGET: armv7a-unknown-linux-gnueabihf
       target: ecw5211-l-t
   
+  - name: arm64:methode-udpu
+    <<: *buildTemplate
+    environment:
+      CTARGET: aarch64-unknown-linux-gnu
+      target: methode-udpu
+  
 
 # Generic targets
   - name: arm:vmlinux
@@ -201,9 +207,8 @@ steps:
       - echo -e $${DRONE_PASSWORD} | openssl base64 -A -d > ./key
       - chmod 600 ./key
       - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentityFile=./key -r $(cat branchName) $${DRONE_USER}@$${DRONE_SERVER}:$${DRONE_DIRECTORY_PATH}
-
 ---
 kind: signature
-hmac: 04820dc500773ea743a245433ca735be7e794d46498655a7b010d07d4c4d06a7
+hmac: 00f83ec917f270863838f4b5abcd25110273b9e92dd7244272844033a5ff5c60
 
 ...
