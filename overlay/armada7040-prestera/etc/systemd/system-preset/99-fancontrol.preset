@@ -1,2 +1,0 @@
-# Enable lm-sensors fancontrol service
-enable fancontrol.service
