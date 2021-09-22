@@ -50,8 +50,8 @@ endif
 
 # Target distribution
 #
-ifneq ($(TDISTRO),)
-  M4FLAGS += -D_TDISTRO_="$(TDISTRO)"
+ifneq ($(TARGET_DISTRO),)
+  M4FLAGS += -D_TDISTRO_="$(TARGET_DISTRO)"
 endif
 
 
