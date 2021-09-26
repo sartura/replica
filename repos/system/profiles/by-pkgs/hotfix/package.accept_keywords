@@ -7,4 +7,4 @@
 dev-libs/libbpf ~*
 
 # Unmask custom ebuilds
-=sys-kernel/linux-headers-5.11 ~*
+>=sys-kernel/linux-headers-5.11 ~*

@@ -1,8 +1,0 @@
-# SPDX-License-Identifier: MIT
-#
-# Copyright (c) 2021 Sartura Ltd.
-#
-
-# eBPF related packages fail to build on ARM64 architecture
->sys-kernel/linux-headers-5.11
-<sys-kernel/linux-headers-5.11
