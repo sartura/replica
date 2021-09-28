@@ -16,7 +16,7 @@ TDEVICE=raspberry-${BTARGET}
 # Output variables
 ODIR=/output
 OTMP=$(mktemp -d)
-OIMG="${ODIR}/gentoo-${TPARCH}-${TDEVICE}.img"
+OIMG="${ODIR}/${TDISTRO}-${TPARCH}-${TDEVICE}.img"
 OROOTFS=${WITH_ROOTFS:-0}
 export XZ_OPT="-2 -T0" # multithreaded
 
