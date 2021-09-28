@@ -100,9 +100,16 @@ steps:
       CTARGET: aarch64-unknown-linux-gnu
       target: as5114-48x
 
-  - name: arm64:rpi4
+  - name: arm64:rpi4:gentoo
     <<: *buildTemplate
     environment:
+      CTARGET: aarch64-unknown-linux-gnu
+      target: rpi4
+
+  - name: arm64:rpi4:debian
+    <<: *buildTemplate
+    environment:
+      TARGET_DISTRO: debian
       CTARGET: aarch64-unknown-linux-gnu
       target: rpi4
 
@@ -209,6 +216,6 @@ steps:
       - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentityFile=./key -r $(cat branchName) $${DRONE_USER}@$${DRONE_SERVER}:$${DRONE_DIRECTORY_PATH}
 ---
 kind: signature
-hmac: 00f83ec917f270863838f4b5abcd25110273b9e92dd7244272844033a5ff5c60
+hmac: 29b453b9fac9ed64c96c9b46a466659f07f7d926592793713d01a6ca5f0134d4
 
 ...
