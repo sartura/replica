@@ -45,7 +45,7 @@ RUN __renv__ __rdistfiles__ __rccache__ \
         > /var/db/repos/crossdev/metadata/layout.conf && \
     set_repository_conf / crossdev && \
     # Generate and install toolchains
-    crossdev --stable --show-fail-log --kernel "[latest]" --target ${CTARGET} && \
+    crossdev --stable --show-fail-log --kernel "5.13" --target ${CTARGET} && \
     # Configure environment
     emerge-wrapper --target ${CTARGET} --init && \
     mkdir -p /usr/${CTARGET}/etc/portage/repos.conf && \
