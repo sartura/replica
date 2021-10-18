@@ -66,7 +66,7 @@ DOCKER_BUILDKIT := 1
 export DOCKER_BUILDKIT
 
 ifeq ($(GENTOO_TAG),)
-  GENTOO_TAG := 20211012
+  GENTOO_TAG := 20211018
 endif
 
 ifeq ($(NO_CACHE),1)
@@ -146,8 +146,8 @@ package_%: build_%
 # Additional targets
 #
 pull:
-	docker pull gentoo/stage3:$(GENTOO_TAG)
-	@docker tag gentoo/stage3:$(GENTOO_TAG) gentoo/stage3:replica
+	docker pull gentoo/stage3:amd64-openrc-$(GENTOO_TAG)
+	@docker tag gentoo/stage3:amd64-openrc-$(GENTOO_TAG) gentoo/stage3:replica
 
 clean:
 	rm -rf output/*
