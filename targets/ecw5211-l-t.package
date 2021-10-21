@@ -53,7 +53,7 @@ gzip -f -9n -c ${OTMP}/kernel/Image > ${OTMP}/kernel/uImage.gzip
 	-o ${OTMP}/kernel/uImage.its
 mkimage -f ${OTMP}/kernel/uImage.its ${OTMP}/kernel/uImage.itb
 
-# Gnerate SquashFS with ZSTD for OverlayFS
+# Gnerate ZSTD compressed UBIFS rootfs
 mkfs.ubifs -x zstd -m ${min_io_size} -e ${leb_size} -c ${max_leb_cnt} -F \
 	-r ${SYSROOT} ${OTMP}/rootfs.ubifs
 

@@ -7,7 +7,7 @@ include(`modules/system.docker')dnl
 
 setdef(`__kernel_remote__', `https://github.com/sartura/linux.git')dnl
 setdef(`__kernel_config__', `./config/kernel/ipq40xx_5.14.y_config')dnl
-setdef(`__kernel_branch__', `ipq40xx/linux-v5.14-rc6')dnl
+setdef(`__kernel_branch__', `ipq40xx/linux-v5.14.14')dnl
 setdef(`__cleanup_extreme__', `yes')dnl
 
 include(`modules/kernel.docker')dnl
