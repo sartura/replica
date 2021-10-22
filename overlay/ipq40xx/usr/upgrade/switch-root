@@ -18,8 +18,7 @@ mount -n -t tmpfs -o size=128m none /$RAMROOT
 cd /$RAMROOT
 mkdir -p etc bin sbin lib var/lock
 # Copy neccessary libs for UBI tools to work
-cp /lib/libc.so.* /$RAMROOT/lib
-cp /lib/ld-linux-armhf.so.* /$RAMROOT/lib
+cp /lib/* /$RAMROOT/lib
 # Copy UBI tools
 cp /usr/sbin/ubi* /$RAMROOT/sbin
 # Copy U-boot envtools
