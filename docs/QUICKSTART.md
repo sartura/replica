@@ -40,6 +40,8 @@ A list of currently supported targets and additional instructions for hardware p
 
 ## After installation
 
-After installation devices are accesible via the serial console.
+After installation devices are accesible via the serial console and SSH.
+
+SSH will be available on a DHCP assigned IP as by default ports are bridged with DHCP client enabled on the bridge.
 
 The default system login is `root` with password `replica`.
