@@ -90,14 +90,7 @@ do_upgrade() {
 FIRMWARE=upgrade.img
 case "$board" in
 	edgecore,ecw5211-l-t)
-	active=$(fw_printenv -n active)
-	if [ "$active" = "1" ]; then
-		fw_setenv active 2 || exit 1
-		do_upgrade "ubi2" "ubi1"
-	else
-		fw_setenv active 1 || exit 1
-		do_upgrade "ubi1" "ubi2"
-	fi
+		do_upgrade "replica"
 		;;
 	*)
 		echo "Unsupported board:" $board
