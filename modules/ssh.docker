@@ -1,0 +1,9 @@
+RUN \
+	# Enable SSH root login
+	sed -i '/#PermitRootLogin/c\PermitRootLogin yes' \
+	${SYSROOT}/etc/ssh/sshd_config && \
+	sed -i '/#PasswordAuthentication/c\PasswordAuthentication yes' \
+	${SYSROOT}/etc/ssh/sshd_config
+
+# Copy system policies from the Docker context
+COPY ./overlay/ssh ${SYSROOT}/

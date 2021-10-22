@@ -22,3 +22,5 @@ RUN \
     # Otherwise boot will be stopped until timezone is selected.
     touch ${SYSROOT}/etc/localtime && \
     echo "BUILD_ID=__git_hash__" >> ${SYSROOT}/etc/os-release
+
+include(`modules/ssh.docker')dnl
