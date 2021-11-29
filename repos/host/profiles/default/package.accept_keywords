@@ -18,14 +18,5 @@ dev-libs/libbpf ~amd64
 dev-util/bpftool ~amd64
 sys-kernel/linux-headers ~amd64
 
-# Unmask clang:12
-sys-devel/clang:12 ~amd64
-sys-devel/clang-common ~amd64
-sys-devel/clang-runtime ~amd64
-sys-devel/llvm:12 ~amd64
-sys-libs/compiler-rt ~amd64
-sys-libs/compiler-rt-sanitizers ~amd64
-sys-libs/libomp ~amd64
-
 # Cross-distribution tooling
 app-arch/dpkg ~amd64
