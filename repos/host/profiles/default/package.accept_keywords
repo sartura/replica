@@ -7,9 +7,6 @@
 app-arch/zstd ~amd64
 sys-fs/mtd-utils ~amd64
 
-# Latest version fails with `cannot find -lmpathpersist`
-=sys-fs/multipath-tools-0.8.3-r2 ~amd64
-
 # Required for dumping BTF information, use latest version
 dev-util/pahole ~amd64
 
