@@ -3,17 +3,6 @@
 # Copyright (c) 2021 Sartura Ltd.
 #
 
-# Unmask latest versions of some packages
-app-arch/zstd ~amd64
-sys-fs/mtd-utils ~amd64
-
-# Required for dumping BTF information, use latest version
-dev-util/pahole ~amd64
-
 # BPF utilities and dependencies on the host
-dev-libs/libbpf ~amd64
 dev-util/bpftool ~amd64
 sys-kernel/linux-headers ~amd64
-
-# Cross-distribution tooling
-app-arch/dpkg ~amd64
