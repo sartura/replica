@@ -1,0 +1,4 @@
+# Jakov Smolić <jakov.smolic@sartura.hr> (2021-11-28)
+# Unmask this version since the libxcrypt transition is
+# not yet done on musl profiles
+virtual/libcrypt:0/1
