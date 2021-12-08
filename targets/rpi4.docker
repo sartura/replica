@@ -12,8 +12,6 @@ include(`modules/system.docker')dnl
 
 setdef(`__debootstrap_release__', `stable')dnl
 setdef(`__debootstrap_url__',     `http://deb.debian.org/debian/')dnl
-setdef(`__debootstrap_dinclude__', `gpg,dirmngr,debian-keyring,fancontrol,firmware-brcm80211,')dnl
-setdef(`__debootstrap_include__', `')dnl
 
 setdef(`__kernel_remote__', `https://github.com/raspberrypi/linux.git')dnl
 setdef(`__kernel_branch__', `rpi-5.10.y')dnl
@@ -40,30 +38,34 @@ include(`modules/configure.docker')dnl
 
 ifelse(index(_TDISTRO_, `debian'),0,`dnl
 RUN __renv__ __rdistfiles__ __rccache__ \
-    mv ${SYSROOT}/boot          /usr/src/boot && \
-    mv ${SYSROOT}/lib/modules   /usr/src/modules && \
-    rm -rf                      ${SYSROOT}/* && \
     debootstrap \
-        --arch=${TPARCH} \
-        --no-merged-usr \
         --cache-dir=/var/cache/distfiles \
-        --components="main,contrib,non-free" \
-        --include="__debootstrap_dinclude__ __debootstrap_include__"\
-ifdef(`__debootstrap_exclude__', `dnl
-        --exclude="__debootstrap_exclude__" \
-')dnl
-        "__debootstrap_release__" ${SYSROOT} "__debootstrap_url__" || ( cat ${SYSROOT}/debootstrap/debootstrap.log; exit 1 )
-    
+        --include="gpg,dirmngr,debian-keyring,ca-certificates,multistrap" \
+        "__debootstrap_release__" /var/tmp/ds/ "__debootstrap_url__" && \
+    sed -i "/Install-Recommends=false/ s|$|;\n\$config_str .= \" -o Acquire::AllowInsecureRepositories=yes\"|" \
+        /var/tmp/ds/usr/sbin/multistrap
+
+COPY ./repos/debian/rpi4/config/multistrap.conf /var/tmp/ds
+
 RUN __renv__ __rdistfiles__ __rccache__ \
+    mv ${SYSROOT}/boot          /var/tmp/boot && \
+    mv ${SYSROOT}/lib/modules   /var/tmp/modules && \
+    #
+    rm -rf ${SYSROOT}/* && \
+    chroot /var/tmp/ds multistrap -a ${TPARCH} -d /ms -f /multistrap.conf && \
+    mv -f /var/tmp/ds/ms/* ${SYSROOT}/ && \
+    #
+    mv -f /var/tmp/modules           ${SYSROOT}/lib/  && \
+    mv -f /var/tmp/boot/*            ${SYSROOT}/boot/ && \
     git clone --depth=1 --branch "__firmware_branch__" __firmware_remote__ \
-        /usr/src/firmware && rm -rf /usr/src/firmware/.git && \
-    cp -r /usr/src/firmware/boot/* ${SYSROOT}/boot/ && \
-    sed -i "s/root:\*:/root\:\$6\$MIf334fS6fTaKihG\$FAoUg\.iIq0WSq\.zZ\.UZ70HrACKRkv9ZGBucyOsXk8hZpqCbkfdo7x\/UVhq7L5Lzd5HTNINQTCcAXttuqSBe070:/" \
-        ${SYSROOT}/etc/shadow && \
-    mv -f /usr/src/boot/*         ${SYSROOT}/boot/ && \
-    mv -f /usr/src/modules      ${SYSROOT}/lib/ && \
-    cp -f ${SYSROOT}/lib/systemd/resolv.conf ${SYSROOT}/etc/ && \
-    chroot ${SYSROOT} systemctl preset-all
+        /var/tmp/firmware && rm -rf /var/tmp/firmware/.git && \
+    cp -r /var/tmp/firmware/boot/*   ${SYSROOT}/boot/ && \
+    #
+    cp -f /var/tmp/ds/etc/{passwd,group}     ${SYSROOT}/etc && \
+    cp -f ${SYSROOT}/lib/systemd/resolv.conf ${SYSROOT}/etc && \
+    LC_ALL=C LANGUAGE=C LANG=C DEBIAN_FRONTEND=noninteractive \
+        chroot ${SYSROOT} dpkg --configure --pending --force-configure-any --force-depends && \
+    gawk -i inplace "BEGIN{OFS=FS=\":\"}; \$1==\"root\" {\$2=\"$(openssl passwd -6 replica)\"}{print}" ${SYSROOT}/etc/shadow
 ')dnl
 
 # Copy system policies from the Docker context

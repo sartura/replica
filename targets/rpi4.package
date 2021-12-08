@@ -28,7 +28,7 @@ fi
 
 # Generate and partition a relatively large image
 # TODO: Research a better way to do this, without wasted space and large files.
-fallocate -l 2048M ${OIMG}
+fallocate -l 4096M ${OIMG}
 sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${OIMG}
   o # clear the in memory partition table
   n # new partition

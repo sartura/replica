@@ -109,12 +109,6 @@ endif
 ifneq ($(DEBOOTSTRAP_URL),)
   M4FLAGS += -D__debootstrap_url__="$(DEBOOTSTRAP_URL)"
 endif
-ifneq ($(DEBOOTSTRAP_INCLUDE),)
-  M4FLAGS += -D__debootstrap_include__="$(DEBOOTSTRAP_INCLUDE)"
-endif
-ifneq ($(DEBOOTSTRAP_EXCLUDE),)
-  M4FLAGS += -D__debootstrap_exclude__="$(DEBOOTSTRAP_EXCLUDE)"
-endif
 ifneq ($(DDR_TOPOLOGY),)
   M4FLAGS += -D__atf_ddr_topology__="$(DDR_TOPOLOGY)"
 endif
