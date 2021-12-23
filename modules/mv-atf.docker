@@ -10,14 +10,20 @@ dnl # Define local defaults
 setdef(`__atf_remote__',      `https://git.trustedfirmware.org/TF-A/trusted-firmware-a.git')dnl
 setdef(`__mv_ddr_remote__',   `https://github.com/MarvellEmbeddedProcessors/mv-ddr-marvell.git')dnl
 setdef(`__mv_utils_remote__', `https://github.com/MarvellEmbeddedProcessors/A3700-utils-marvell.git')dnl
+setdef(`__mv_bins_remote__',  `https://github.com/MarvellEmbeddedProcessors/binaries-marvell.git')dnl
 setdef(`__cpp_remote__',      `https://github.com/weidai11/cryptopp.git')dnl
 setdef(`__mv_ddr_branch__',   `master')dnl
 setdef(`__mv_utils_branch__', `master')dnl
+setdef(`__mv_bins_branch__',  `binaries-marvell-armada-SDK10.0.1.0')dnl
+setdef(`__atf_ddr_topology__',  `0')dnl
 
 # Download and prepare ATF for this target
 RUN __renv__ \
     cd /usr/src && \
     git clone --depth=1 --branch "__mv_ddr_branch__" __mv_ddr_remote__ mv-ddr && \
+ifelse(index(__atf_platform__, `t9130'),-1,,`dnl
+    git clone --depth=1 --branch "__mv_bins_branch__" __mv_bins_remote__ mv-bins && \
+')dnl
 ifelse(index(__atf_platform__, `a3700'),-1,,`dnl
     git clone --depth=1 --branch "__mv_utils_branch__" __mv_utils_remote__ mv-utils && \
 ')dnl
@@ -27,9 +33,10 @@ ifelse(index(__atf_platform__, `a3700'),-1,,`dnl
 
 dnl # Construct ATF environment build variables
 setdef(`__atf_env__', `')dnl
-concatdef(`__atf_env__', `DEBUG=1 USE_COHERENT_MEM=0 PLAT=__atf_platform__')dnl
+concatdef(`__atf_env__', `PLAT=__atf_platform__')dnl
 concatdef(`__atf_env__', `MV_DDR_PATH=/usr/src/mv-ddr')dnl
 concatdef(`__atf_env__', `CRYPTOPP_PATH=/usr/src/cpp')dnl
+concatdef(`__atf_env__', `DDR_TOPOLOGY=__atf_ddr_topology__')dnl
 
 ifelse(index(__atf_platform__, `a3700'),-1,,`dnl
 concatdef(`__atf_env__', `WTP=/usr/src/mv-utils')dnl
@@ -40,9 +47,13 @@ RUN __renv__ __rdistfiles__ __rccache__ \
     crossdev --stable --kernel "[latest]" --target arm-linux-gnueabi --show-fail-log
 ')dnl
 
+ifelse(index(__atf_platform__, `t9130'),-1,,`dnl
+concatdef(`__atf_env__', `SCP_BL2=/usr/src/mv-bins/mrvl_scp_bl2.img')dnl
+')dnl
+
 # Configure, build, and install ATF
 RUN __renv__ __rccache__ \
     cd /usr/src/atf && export ATFOPTS="__atf_env__" && \
     make CROSS_COMPILE="${CTARGET}-" CROSS_CM3="arm-linux-gnueabi-" \
         BL33=${SYSROOT}/boot/u-boot.bin ${ATFOPTS} mrvl_flash mrvl_bootimage && \
-    cp ./build/__atf_platform__/debug/{boot,flash}-image.bin ${SYSROOT}/boot/
+    cp ./build/__atf_platform__/release/{boot,flash}-image.bin ${SYSROOT}/boot/

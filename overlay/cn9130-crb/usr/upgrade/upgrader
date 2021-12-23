@@ -1,0 +1,45 @@
+#!/bin/sh
+set -e
+
+# Script for updating in the minimal BusyBox upgrade environment
+
+board=$(strings /proc/device-tree/compatible | head -1)
+
+error_die() {
+        echo "Error: " "$*"
+        exit 1
+}
+
+do_upgrade() {
+	local install_disk=$1
+
+	echo "Running system upgrade for $board"
+
+	[ -n "$install_disk" ] || error_die "no installation partition passed"
+
+	[ -f "$FIRMWARE" ] || error_die "no firmware found for filename $FIRMWARE"
+
+	echo "Wait for the kernel to finish unmounting"
+	sleep 5s
+
+	echo "Writing image to disk"
+	dd if=$FIRMWARE of=$install_disk bs=1M
+
+	sync
+
+	echo "Rebooting the system now!"
+	sleep 2s #Ensure that its actually printed
+
+	reboot
+}
+
+FIRMWARE=upgrade.tar
+case "$board" in
+	marvell,cn9130)
+		do_upgrade "/dev/mmcblk1"
+		;;
+	*)
+		echo "Unsupported board:" $board
+		exit 1
+	;;
+esac

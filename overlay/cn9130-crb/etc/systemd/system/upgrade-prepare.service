@@ -1,0 +1,8 @@
+[Unit]
+Description=System update prepare
+DefaultDependencies=no
+ConditionPathExists=/usr/upgrade/switch-root
+
+[Service]
+Type=oneshot
+ExecStart=/usr/upgrade/switch-root

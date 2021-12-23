@@ -19,6 +19,7 @@
 *sys-fs/mtd-utils
 *sys-fs/multipath-tools
 *sys-fs/squashfs-tools
+*sys-apps/gptfdisk
 
 # general development
 *dev-libs/elfutils

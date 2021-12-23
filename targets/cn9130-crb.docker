@@ -1,0 +1,49 @@
+dnl SPDX-License-Identifier: MIT
+dnl
+dnl Copyright (c) 2021 Sartura Ltd.
+dnl
+include(`modules/base.docker')dnl
+include(`modules/system.docker')dnl
+
+setdef(`__kernel_remote__', `https://github.com/sartura/linux.git')dnl
+setdef(`__kernel_branch__', `marvell/cn9130-crb-5.15.5')dnl
+setdef(`__kernel_config__', `./config/kernel/_BTARGET_`'_5.15.y_config')dnl
+setdef(`__uboot_remote__', `https://github.com/sartura/u-boot.git')dnl
+setdef(`__uboot_branch__',  `marvell/cn9130-crb')dnl
+setdef(`__uboot_config__',  `mvebu_crb_cn9130_defconfig')dnl
+setdef(`__atf_branch__',  `master')dnl
+setdef(`__atf_platform__',  `t9130')dnl
+setdef(`__cleanup_extreme__', `yes')dnl
+
+include(`modules/kernel.docker')dnl
+include(`modules/u-boot.docker')dnl
+include(`modules/mv-atf.docker')dnl
+
+# Switch to target-specific Gentoo profile and update installation
+COPY ./repos/replica /var/db/repos/replica
+COPY ./config/portage ${SYSROOT}/etc/portage
+RUN __renv__ __rdistfiles__ __rccache__ \
+    set_repository_conf ${SYSROOT} replica 100 && \
+    set_portage_profile ${SYSROOT} replica replica/_BTARGET_ && \
+    cross-emerge -vt --keep-going=n --deep --with-bdeps=y --newuse --newrepo @world
+
+dnl # Common snippets to clean and configure system
+include(`modules/cleanup.docker')dnl
+include(`modules/configure.docker')dnl
+
+# Target-specific filesystem cleanup and configuration
+RUN \
+    # NOTE: The watchdog hardware needs to be utilized to avoid device "crashes".
+    sed -i '/#RuntimeWatchdogSec/c\RuntimeWatchdogSec=20s' \
+        ${SYSROOT}/etc/systemd/system.conf
+
+# Copy system policies from the Docker context
+COPY ./overlay/_BTARGET_ ${SYSROOT}/
+
+# Packaging utilities
+COPY ./scripts/boot /tools
+COPY ./targets/_BTARGET_.package /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+# Inject target variable into the environment
+ENV BTARGET=_BTARGET_

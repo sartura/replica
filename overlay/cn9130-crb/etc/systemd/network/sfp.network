@@ -1,0 +1,5 @@
+[Match]
+Name=sfp
+
+[Network]
+Bridge=br-lan

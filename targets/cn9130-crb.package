@@ -1,0 +1,111 @@
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+source /etc/profile
+
+set -e
+set -u
+shopt -s nullglob
+
+# Target variables
+TDEVICE=mvebu-${BTARGET}
+
+# Output variables
+ODIR=/output
+ROOTFS_OTMP=$(mktemp -d)
+BOOT_TMP=$(mktemp -d)
+BOOT_DISCARD_TMP=$(mktemp -d)
+OIMG="${ODIR}/gentoo-${TPARCH}-${TDEVICE}.img"
+OFILE=""
+dtb_file=cn9130-crb-A.dtb
+OROOTFS=${WITH_ROOTFS:-0}
+export XZ_OPT="-2 -T0" # multithreaded
+
+# Check whether the output directory exists
+if [[ ! -d ${ODIR} ]]; then
+	echo "docker-entrypoint: output directory does not exist!"
+	exit 1
+fi
+
+# This file contains various data about installed packages, depgraph, etc.
+mv ${SYSROOT}/sysdesc ${ODIR}/sysdesc-${TPARCH}-${TDEVICE}.txt
+
+# Move boot files from SYSROOT
+mv ${SYSROOT}/boot ${BOOT_DISCARD_TMP}
+
+# Get the sysroot size
+IMAGE_SIZE=$(du -sb ${SYSROOT} | cut -f1)
+# Add 50MB for boot partition
+BOOT_SIZE=52428800
+# Add 50MB for padding
+IMAGE_PADDING=52428800
+IMAGE_SIZE=$(($IMAGE_SIZE + $BOOT_SIZE + $IMAGE_PADDING))
+
+# Align to the next MB
+IMAGE_ALIGNMENT=1048576
+IMAGE_SIZE=$(( ($IMAGE_SIZE + $IMAGE_ALIGNMENT - 1) / $IMAGE_ALIGNMENT * $IMAGE_ALIGNMENT))
+
+# Generate image per the previously calculated size
+fallocate -l ${IMAGE_SIZE} ${OIMG}
+
+# Generate GPT partition table
+# Set boot partition type as Extended Boot Loader Partition and the
+# rootfs partition type as Root Partition (64-bit ARM/AArch64)
+# per https://systemd.io/DISCOVERABLE_PARTITIONS/
+sgdisk -o ${OIMG}
+# Start at 4MiB as 0 to 4 MiB is used for the ATF+U-boot
+sgdisk -n 0:4MiB:+50MiB -t 0:0xea00 -c 0:boot ${OIMG}
+sgdisk -n 0:0:0 -t 0:0x8305 -c 0:rootfs ${OIMG}
+
+# Setup the image file as a loopback device for formatting
+# NOTE: Using `--partscan` here would register only in the default namespace.
+if ! ODEV=$(losetup --show --find ${OIMG}); then
+	echo "docker-entrypoint: unable to setup a loopback device!"
+	exit 1
+elif ! kpartx -usv ${ODEV}; then
+	echo "docker-entrypoint: unable to update partition mappings!"
+	exit 1
+fi
+
+ODEVN=$(basename ${ODEV})
+
+# Generate EXT4 boot partition
+mkfs.ext4 -F -T default -L boot /dev/mapper/${ODEVN}p1
+
+# Generate EXT4 rootfs partition
+mkfs.ext4 -F -T default -L rootfs -d ${SYSROOT} /dev/mapper/${ODEVN}p2
+
+# Mount EXT4 boot partition
+mount /dev/mapper/${ODEVN}p1 ${BOOT_TMP}
+
+# Get rootfs partition PARTUUID
+ROOTFS_UUID=$(blkid -s PARTUUID -o value /dev/mapper/${ODEVN}p2)
+
+# Prepare boot files (kernel and DTB)
+cp ${BOOT_DISCARD_TMP}/boot/Image ${BOOT_TMP}
+cp ${BOOT_DISCARD_TMP}/boot/dtbs/marvell/${dtb_file} ${BOOT_TMP}/
+# Prepare bootscript
+cp /tools/generic-arm64.bootscript ${BOOT_DISCARD_TMP}
+sed -i "s/@ROOT@/${ROOTFS_UUID}/g" \
+	${BOOT_DISCARD_TMP}/generic-arm64.bootscript
+sed -i "s/@DTB@/${dtb_file}/g" \
+	${BOOT_DISCARD_TMP}/generic-arm64.bootscript
+mkimage -A ${TPARCH} -O linux -T script -C none -a 0 -e 0 \
+	-d ${BOOT_DISCARD_TMP}/generic-arm64.bootscript \
+	${BOOT_TMP}/boot.scr
+umount ${BOOT_TMP}
+
+dd if=${BOOT_DISCARD_TMP}/boot/flash-image.bin of=${OIMG} bs=512 seek=4096 conv=notrunc
+
+if (( OROOTFS )); then
+	# Package the root filesystem as a compressed archive
+	# NOTE: We use `.` to specify contents of the current (SYSROOT) directory.
+	OFILE="${ODIR}/rootfs-${TPARCH}-${TDEVICE}.tar.xz"
+	tar --directory=${SYSROOT} --totals --create --xz --file ${OFILE} .
+fi
+
+# Flush cached writes, remove devices
+sync && kpartx -dv ${ODEV} && losetup -d ${ODEV}

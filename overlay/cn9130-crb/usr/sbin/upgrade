@@ -1,0 +1,12 @@
+#!/bin/sh
+
+FIRMWARE=$1
+
+if [ -n "$FIRMWARE" ]; then
+	echo "Fetching firmware from: $FIRMWARE"
+	wget $1 -O /tmp/upgrade.tar
+fi
+
+echo "Starting system firmware upgrade"
+
+systemctl start upgrade.service

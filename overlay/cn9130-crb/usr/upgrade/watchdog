@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+# Script for setting the watchdog in the minimal BusyBox upgrade environment
+
+board=$(strings /proc/device-tree/compatible | head -1)
+
+set_watchdog() {
+	watchdog -T $2 -t $1 /dev/watchdog
+}
+
+case "$board" in
+	marvell,cn9130)
+		set_watchdog 20 60
+		;;
+	*)
+		echo "Unsupported board:" $board
+		exit 1
+	;;
+esac

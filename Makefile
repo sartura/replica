@@ -115,6 +115,9 @@ endif
 ifneq ($(DEBOOTSTRAP_EXCLUDE),)
   M4FLAGS += -D__debootstrap_exclude__="$(DEBOOTSTRAP_EXCLUDE)"
 endif
+ifneq ($(DDR_TOPOLOGY),)
+  M4FLAGS += -D__atf_ddr_topology__="$(DDR_TOPOLOGY)"
+endif
 
 ifneq ($(WITH_ROOTFS),)
   DRUNOPTS += --env WITH_ROOTFS=1
