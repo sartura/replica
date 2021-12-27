@@ -130,6 +130,12 @@ steps:
     environment:
       CTARGET: aarch64-unknown-linux-gnu
       target: methode-udpu
+
+  - name: arm:clearfog-base
+    <<: *buildTemplate
+    environment:
+      CTARGET: armv7a-unknown-linux-gnueabihf
+      target: clearfog-base
   
 
 # Generic targets

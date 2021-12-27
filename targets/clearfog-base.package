@@ -1,0 +1,80 @@
+#!/bin/bash
+source /etc/profile
+
+set -e
+set -u
+shopt -s nullglob
+
+# Target variables
+TDEVICE=mvebu-${BTARGET}
+
+# Output variables
+ODIR=/output
+OIMG="${ODIR}/gentoo-${TPARCH}-${TDEVICE}.img"
+OFILE=""
+OROOTFS=${WITH_ROOTFS:-0}
+export XZ_OPT="-2 -T0" # multithreaded
+
+# Check whether the output directory exists
+if [[ ! -d ${ODIR} ]]; then
+	echo "docker-entrypoint: output directory does not exist!"
+	exit 1
+fi
+
+# This file contains various data about installed packages, depgraph, etc.
+mv ${SYSROOT}/sysdesc ${ODIR}/sysdesc-${TPARCH}-${TDEVICE}.txt
+
+# Generate and partition a relatively large image
+# TODO: Research a better way to do this, without wasted space and large files.
+fallocate -l 1024M ${OIMG}
+sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${OIMG}
+  o # clear the in memory partition table
+  n # new partition
+  p # primary partition
+  1 # partition number 1
+    # default, start at beginning of disk
+    # default, extend partition to end of disk
+  a # make a partition bootable
+  p # print the in-memory partition table
+  w # write the partition table
+  q # done
+EOF
+
+# Setup the image file as a loopback device for formatting
+# NOTE: Using `--partscan` here would register only in the default namespace.
+if ! ODEV=$(losetup --show --find ${OIMG}); then
+	echo "docker-entrypoint: unable to setup a loopback device!"
+	exit 1
+elif ! kpartx -usv ${ODEV}; then
+	echo "docker-entrypoint: unable to update partition mappings!"
+	exit 1
+fi
+
+MDIR=$(mktemp -d)
+ODEVN=$(basename ${ODEV})
+
+# NOTE: ClearFog Base's u-Boot does not support filesystems with metadata
+#       checksumming, and with more than 2^32 blocks.
+mkfs.ext4 -F -O '^metadata_csum,^64bit' /dev/mapper/${ODEVN}p1
+mount /dev/mapper/${ODEVN}p1 ${MDIR}
+	rsync --archive --hard-links --info=progress2 ${SYSROOT}/. ${MDIR}
+umount ${MDIR}
+
+# NOTE: ClearFog Base supports having u-Boot flashed onto the microSD card.
+dd if=/usr/local/u-boot-clearfog.pp.mmc of=${ODEV} seek=1 bs=512
+dd if=/dev/zero of=${ODEV} bs=512 seek=1920 count=128
+mkenvimage -s 0x10000 -o /usr/local/clearfog.env /usr/local/clearfog.txt
+dd if=/usr/local/clearfog.env of=${ODEV} bs=512 seek=1920
+
+if (( OROOTFS )); then
+	# Package the root filesystem as a compressed archive
+	# NOTE: We use `.` to specify contents of the current (SYSROOT) directory.
+	OFILE="${ODIR}/rootfs-${TPARCH}-${TDEVICE}.tar.xz"
+	tar --directory=${SYSROOT} --totals --create --xz --file ${OFILE} .
+fi
+
+# Flush cached writes, remove devices
+sync && kpartx -dv ${ODEV} && losetup -d ${ODEV}
+
+# Compress resulting raw disk image
+xz --compress ${OIMG}
