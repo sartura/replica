@@ -1,5 +1,5 @@
 [Match]
-Name=eth*
+Name=lan*
 
 [Network]
 Bridge=br-lan
