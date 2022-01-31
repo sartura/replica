@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2021 Sartura Ltd.
+#
+
+# Enable pam support
+sys-apps/util-linux pam
