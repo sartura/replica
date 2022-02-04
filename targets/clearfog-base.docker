@@ -1,6 +1,6 @@
 dnl SPDX-License-Identifier: MIT
 dnl
-dnl Copyright (c) 2021 Sartura Ltd.
+dnl Copyright (c) 2022 Sartura Ltd.
 dnl
 include(`modules/base.docker')dnl
 include(`modules/system.docker')dnl
