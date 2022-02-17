@@ -1,0 +1,34 @@
+dnl SPDX-License-Identifier: MIT
+dnl
+dnl Copyright (c) 2022 Sartura Ltd.
+dnl
+include(`modules/base.docker')dnl
+include(`modules/system.docker')dnl
+
+setdef(`__kernel_remote__', `https://github.com/sartura/linux.git')dnl
+setdef(`__kernel_config__', `./config/kernel/puzzle-m801_linux-5.16.y_config')dnl
+setdef(`__kernel_branch__', `puzzle-m801/linux-v5.16.9')dnl
+setdef(`__kernel_clean__',  `clean')dnl
+
+include(`modules/kernel.docker')dnl
+
+# Switch to target-specific Gentoo profile and update installation
+COPY ./repos/replica /var/db/repos/replica
+RUN __renv__ __rdistfiles__ __rccache__  \
+    set_repository_conf ${SYSROOT} replica 100 && \
+    set_portage_profile ${SYSROOT} replica replica/_BTARGET_ && \
+    cross-emerge -vt --keep-going=n --deep --with-bdeps=y --newuse --newrepo @world
+
+dnl # Common snippets to clean and configure system
+include(`modules/cleanup.docker')dnl
+include(`modules/configure.docker')dnl
+
+# Copy system policies from the Docker context
+COPY ./overlay/_BTARGET_ ${SYSROOT}/
+
+# Packaging utilities
+COPY ./targets/_BTARGET_.package /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+# Inject target variable into the environment
+ENV BTARGET=_BTARGET_
