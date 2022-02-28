@@ -1,0 +1,40 @@
+name: Weekly update action
+on:
+  schedule:
+    - cron: '0 5 ? * THU'
+    
+jobs:
+  weekly-update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: peterjgrainger/action-create-branch@v2.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: 'weekly/update'
+      
+      - uses: actions/checkout@v2.4.0
+        with: 
+          ref: 'weekly/update'
+          submodules: 'recursive'
+      
+      - run: echo "DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
+      
+      - run: | 
+          sed -i -e "s/GENTOO_TAG := [0-9]*$/GENTOO_TAG := ${{ env.DATE }}/" Makefile
+          git submodule update --recursive --remote
+      
+      - uses: crazy-max/ghaction-import-gpg@v4
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+      
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Update Gentoo stage3 and repositories to ${{ env.DATE }}
+          commit_options: '--signoff'
+          commit_user_name: Sartura Bot
+          commit_user_email: replica@sartura.hr
+          commit_author: Sartura Bot <replica@sartura.hr>
