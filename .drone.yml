@@ -17,24 +17,67 @@ steps:
       - mkdir $(cat branchName)
       - date '+%Y-%m-%d' > dateDirectory
 
-# Build templates
+
+# Templates
   - name: buildTemplate
     nodeinfo: &buildTemplate
       environment:
         CTARGET: architecture
         target: target
+        TARGET_DISTRO: gentoo
       commands:
+        - cd .. && mkdir replica-$${target}-$${CTARGET}-$${TARGET_DISTRO}
+        - cd replica-$${target}-$${CTARGET}-$${TARGET_DISTRO}
+        - cp -a ../src/. ./
         - make V=1 J=$(($(nproc) + 1)) package_$${target}
-        - mkdir -p ./$(cat branchName)/$${target}/$(cat dateDirectory)
-        - mv ./output/* ./$(cat branchName)/$${target}/$(cat dateDirectory)
-   
+        - mkdir -p ./$${target}/$(cat dateDirectory)
+        - cp -a ./output/. ./$${target}/$(cat dateDirectory)/
+        - rsync -a ./$${target} ../src/$(cat branchName)/
+      depends_on: [submodules]
+       
   - name: buildTemplateNoOutput
     nodeinfo: &buildTemplateNoOutput
       environment:
         CTARGET: architecture
         target: target
+        TARGET_DISTRO: gentoo
       commands:
+        - cd .. && mkdir replica-$${target}-$${CTARGET}-$${TARGET_DISTRO}
+        - cd replica-$${target}-$${CTARGET}-$${TARGET_DISTRO}
+        - cp -a ../src/. ./
         - make V=1 J=$(($(nproc) + 1)) package_$${target}
+      depends_on: [submodules]
+  
+  - name: artifactsTemplate
+    nodeinfo: &artifactsTemplate
+      environment:
+        DRONE_USER:
+          from_secret: droneUser
+        DRONE_PASSWORD:
+          from_secret: dronePassword
+        DRONE_SERVER:
+          from_secret: droneServer
+        DRONE_DIRECTORY_PATH:
+          from_secret: droneDirectoryPath
+        DRONE_RELEASES_PATH:
+          from_secret: droneReleasesPath
+      depends_on: [
+    # Toolchain targets
+    'arm:toolchain', 'arm64:toolchain', 'amd64:toolchain', 'arm-musl:toolchain', 'arm64-musl:toolchain', 'amd64-musl:toolchain',
+    
+    # Device targets
+    'arm64:tn48m', 'arm64:tn4810m', 'arm64:tx4810', 'arm64:as5114-48x', 'arm64:rpi4:gentoo', 'arm64:rpi4:debian', 'amd64:sn2010',
+    'arm:ecw5211-l-t', 'arm64:methode-udpu', 'arm64:cn9130-crb', 'arm:clearfog-base', 'arm64:puzzle-m801',
+    
+    # Generic targets
+    'arm:vmlinux', 'arm64:vmlinux', 'amd64:vmlinux',
+    
+    # System targets
+    'arm:system', 'arm64:system', 'amd64:system', 'arm-musl:system', 'arm64-musl:system', 'amd64-musl:system',
+    
+    # Package targets 
+    'arm64:package'
+    ]
 
 
 # Toolchain targets
@@ -131,6 +174,12 @@ steps:
       CTARGET: aarch64-unknown-linux-gnu
       target: methode-udpu
 
+  - name: arm64:cn9130-crb
+    <<: *buildTemplate
+    environment:
+      CTARGET: aarch64-unknown-linux-gnu
+      target: cn9130-crb
+
   - name: arm:clearfog-base
     <<: *buildTemplate
     environment:
@@ -142,6 +191,7 @@ steps:
     environment:
       CTARGET: aarch64-unknown-linux-gnu
       target: puzzle-m801
+
 
 # Generic targets
   - name: arm:vmlinux
@@ -209,24 +259,29 @@ steps:
       target: package
       PACKAGE: "sys-apps/ethtool"
 
- 
-# File transfer 
+
+# Transfer Artifacts
   - name: transferArtifacts
-    environment:
-      DRONE_USER:
-        from_secret: droneUser
-      DRONE_PASSWORD:
-        from_secret: dronePassword
-      DRONE_SERVER:
-        from_secret: droneServer
-      DRONE_DIRECTORY_PATH:
-        from_secret: droneDirectoryPath
-    commands:
+    <<: *artifactsTemplate
+    commands: 
       - echo -e $${DRONE_PASSWORD} | openssl base64 -A -d > ./key
       - chmod 600 ./key
       - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentityFile=./key -r $(cat branchName) $${DRONE_USER}@$${DRONE_SERVER}:$${DRONE_DIRECTORY_PATH}
+
+  - name: transferReleases
+    <<: *artifactsTemplate
+    commands:
+      - echo -e $${DRONE_PASSWORD} | openssl base64 -A -d > ./key
+      - chmod 600 ./key
+      - cp -r $(cat branchName) $${DRONE_TAG}
+      - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentityFile=./key -r $${DRONE_TAG} $${DRONE_USER}@$${DRONE_SERVER}:$${DRONE_RELEASES_PATH}
+    when:
+      event:
+      - tag   
+
+
 ---
 kind: signature
-hmac: c7080d4b2a6d0ddb632cb51de9ed97c56bdacfdc6e7fdbff6eaf83a9682fb3c4
+hmac: 5c3eedb9a6677169b5163e5acee8aa6b71abe2644a01b1983f1a2a297d5a0855
 
 ...
