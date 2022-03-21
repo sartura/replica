@@ -26,7 +26,7 @@ mv ${SYSROOT}/sysdesc ${ODIR}/sysdesc-${TPARCH}-${TDEVICE}.txt
 
 # Generate and partition a relatively large image
 # TODO: Research a better way to do this, without wasted space and large files.
-fallocate -l 1024M ${OIMG}
+fallocate -l 1536M ${OIMG}
 sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${OIMG}
   o # clear the in memory partition table
   n # new partition
