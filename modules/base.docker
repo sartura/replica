@@ -2,7 +2,7 @@ dnl SPDX-License-Identifier: MIT
 dnl
 dnl Copyright (c) 2021 Sartura Ltd.
 dnl
-# syntax = docker/dockerfile:1.2
+# syntax = docker/dockerfile:1.4
 FROM gentoo/stage3:replica
 COPY ./repos/gentoo /var/db/repos/gentoo
 
