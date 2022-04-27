@@ -7,11 +7,6 @@ dnl # The default shell is /bin/bash
 setdef(`__configure_shell__', `/bin/bash')dnl
 
 RUN \
-    # NOTE: Users and groups cross-installation is not fully supported.
-    # https://bugs.gentoo.org/541406
-    for f in passwd group shadow; do \
-        cp -f /etc/${f} ${SYSROOT}/etc/${f}; \
-    done && \
     # NOTE: `sys-apps/baselayout` assumes `/bin/bash` by default
     # TODO: Research a way to avoid this.
     sed -i "s,/bin/bash,__configure_shell__," ${SYSROOT}/etc/passwd && \
