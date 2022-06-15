@@ -1,7 +1,7 @@
 #!/bin/bash
 # SPDX-License-Identifier: MIT
 #
-# Copyright (c) 2021 Sartura Ltd.
+# Copyright (c) 2021-2022 Sartura Ltd.
 #
 
 source /etc/profile
@@ -14,6 +14,7 @@ shopt -s nullglob
 ODIR=/output
 PKGCPN=""
 PKGPN=""
+PKGSUFFIX="-1.xpak"
 
 # Check whether the output directory exists
 if [[ ! -d ${ODIR} ]]; then
@@ -26,9 +27,9 @@ if ! PKGCPN=$(ROOT=${SYSROOT} qdepends --root=${SYSROOT} "${PACKAGE}" | cut -d':
 	exit 1
 fi
 
-PKGPN=$(echo ${PKGCPN} | cut -d'/' -f2);
-
-install -m644 ${SYSROOT}/packages/${PKGCPN}.tbz2 ${ODIR}/${PKGPN}.tar.bz2
+PKGPN=$(echo ${PKGCPN} | cut -d'/' -f2)
+PKGFILE=$(find ${SYSROOT}/packages -type f -name "${PKGPN}${PKGSUFFIX}")
+qtbz2 --tarbz2 ${PKGFILE} --dir ${ODIR}
 
 # Flush cached writes
 sync
