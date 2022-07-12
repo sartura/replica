@@ -6,7 +6,7 @@ Replica.one Requirements
 The Replica.one build system depends on the following software:
 
 * [GNU make](https://www.gnu.org/software/make/) v1 or later
-* [GNU m4](https://www.gnu.org/software/m4/) v4 or later
+* [GNU m4](https://www.gnu.org/software/m4/) v1.4 or later
 * [Docker](https://docs.docker.com/get-docker/) v18.09 or later
 
 The following software is recommended in order to achieve the optimal workflow with the Replica.one project:
@@ -29,13 +29,13 @@ emerge -av sys-devel/make app-emulation/docker sys-devel/m4 dev-vcs/git
 pacman -S make docker m4 git
 ```
 
-### Ubuntu 20.04 LTS
+### Ubuntu 20.04 LTS (Focal Fossa)
 
 ```
 apt-get install make docker.io m4 git
 ```
 
-### Debian GNU/Linux 11 (Bullseye)
+### Debian 11 (Bullseye)
 
 ```
 apt-get install make docker.io m4 git
