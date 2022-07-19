@@ -22,11 +22,13 @@ include(`modules/kernel.docker')dnl
 # Install target architecture packages
 ifelse(index(_TDISTRO_, `gentoo'),0,`dnl
 COPY ./repos/replica /var/db/repos/replica
+copy ./repos/switch  /var/db/repos/switch
 COPY ./config/portage         ${SYSROOT}/etc/portage
 RUN __renv__ __rdistfiles__ __rccache__ \
     set_repository_conf ${SYSROOT} replica 100 && \
-    set_portage_profile ${SYSROOT} replica replica/_BTARGET_ && \
-    cross-emerge -vt --keep-going=n --deep --with-bdeps=y --newuse --newrepo @world
+    set_repository_conf ${SYSROOT} switch 101 && \
+    set_portage_profile ${SYSROOT} switch replica/_BTARGET_ && \
+    cross-emerge -vt --keep-going=n --deep --with-bdeps=y --newuse --newrepo @world || sleep 1h
 
 dnl # Common snippets to clean and configure system
 include(`modules/cleanup.docker')dnl

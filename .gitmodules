@@ -7,3 +7,6 @@
 [submodule "repos/replica"]
 	path = repos/replica
 	url = https://github.com/sartura/replica-overlay-main.git
+[submodule "repos/switch"]
+	path = repos/switch
+	url = git@github.com:sartura/replica-overlay-switch.git
