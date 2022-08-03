@@ -1,7 +1,7 @@
 #!/bin/bash
 # SPDX-License-Identifier: MIT
 #
-# Copyright (c) 2021 Sartura Ltd.
+# Copyright (c) 2021-2022 Sartura Ltd.
 #
 
 source /etc/profile
@@ -17,6 +17,7 @@ TDEVICE=mellanox-${BTARGET}
 ODIR=/output
 OWNER=$(stat -c '%u:%g' ${ODIR})
 OIMG="${ODIR}/gentoo-${TPARCH}-${TDEVICE}.img"
+PXEIMG="${ODIR}/gentoo-${TPARCH}-${TDEVICE}-pxe.img"
 OFILE=""
 OROOTFS=${WITH_ROOTFS:-0}
 export XZ_OPT="-2 -T0" # multithreaded
@@ -29,6 +30,40 @@ fi
 
 # This file contains various data about installed packages, depgraph, etc.
 mv ${SYSROOT}/sysdesc ${ODIR}/sysdesc-${TPARCH}-${TDEVICE}.txt
+
+# Generate and partition an image for PXE boot
+fallocate -l 8G ${PXEIMG}
+sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${PXEIMG}
+  g # create GUID Partition Table
+  n #
+  1 # (root partition)
+    # default - start at beginning of disk
+    # default - finish at end of disk
+  p #
+  w # write the partition table
+  q # done
+EOF
+
+# Setup the PXE image file as a loopback device for formatting
+# NOTE: Using `--partscan` here would register only in the default namespace.
+if ! PXEODEV=$(losetup --show --find ${PXEIMG}); then
+	echo "docker-entrypoint: unable to setup a loopback device!"
+	exit 1
+elif ! kpartx -usv ${PXEODEV}; then
+	echo "docker-entrypoint: unable to update partition mappings!"
+	exit 1
+fi
+
+PXEMDIR=$(mktemp -d)
+PXEODEVN=$(basename ${PXEODEV})
+
+# setup PXE image partition
+mkfs.ext4 -F /dev/mapper/${PXEODEVN}p1
+mount /dev/mapper/${PXEODEVN}p1 ${PXEMDIR}
+	rsync --archive --hard-links --info=progress2 ${SYSROOT}/. ${PXEMDIR}
+umount ${PXEMDIR}
+
+sync && kpartx -dv ${PXEODEV} && losetup -vd ${PXEODEV}
 
 # Generate and partition an image for M.2 (S42) 3IE3
 fallocate -l 8G ${OIMG}
@@ -117,3 +152,4 @@ sync && kpartx -dv ${ODEV} && losetup -vd ${ODEV}
 
 # Compress resulting raw disk image
 xz --force --compress ${OIMG}
+xz --force --compress ${PXEIMG}
