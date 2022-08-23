@@ -15,7 +15,7 @@ setdef(`__debootstrap_url__',     `http://deb.debian.org/debian/')dnl
 
 setdef(`__kernel_remote__', `https://github.com/sartura/linux.git')dnl
 setdef(`__kernel_config__', `./config/kernel/armada7040-prestera_5.15.y_config')dnl
-setdef(`__kernel_branch__', `marvell/prestera-5.15.32')dnl
+setdef(`__kernel_branch__', `marvell/prestera-5.15.62')dnl
 
 include(`modules/kernel.docker')dnl
 
