@@ -15,7 +15,7 @@ jobs:
         
       - run: |
           git checkout -b weekly/update main
-          echo "DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
+          echo "DATE=$(date -d "last-monday" +%Y%m%d)" >> $GITHUB_ENV
       
       - run: |
           sed -i -e "s/GENTOO_TAG := [0-9]*$/GENTOO_TAG := ${{ env.DATE }}/" Makefile
