@@ -1,0 +1,40 @@
+dnl SPDX-License-Identifier: MIT
+dnl
+dnl Copyright (c) 2022 Sartura Ltd.
+dnl
+include(`modules/base.docker')dnl
+include(`modules/system.docker')dnl
+
+setdef(`__kernel_remote__', `https://github.com/sartura/linux.git')dnl
+setdef(`__kernel_branch__', `vm-test/linux-v6.0')dnl
+ifelse(index(__CTARGET__, `x86_64-'),-1,,`dnl
+setdef(`__kernel_config__', `./config/kernel/vm-test_6.0.y_amd64_config')dnl
+')dnl
+ifelse(index(__CTARGET__, `aarch64-'),-1,,`dnl
+setdef(`__kernel_config__', `./config/kernel/vm-test_6.0.y_arm64_config')dnl
+')dnl
+
+include(`modules/genkernel.docker')dnl
+
+# Install target architecture packages
+COPY ./repos/replica /var/db/repos/replica
+COPY ./config/portage         ${SYSROOT}/etc/portage
+RUN __renv__ __rdistfiles__ __rccache__ \
+    set_repository_conf ${SYSROOT} replica 100 && \
+    set_portage_profile ${SYSROOT} replica replica/_BTARGET_/${TPARCH} && \
+    cross-emerge -vt --keep-going=n --deep --with-bdeps=y --newuse --newrepo @world
+
+# Common snippets to clean and configure system
+include(`modules/configure.docker')dnl
+
+# Copy system policies from the Docker context
+COPY ./overlay/vm-test ${SYSROOT}/
+
+# Packaging utilities
+RUN __renv__ __rdistfiles__ __rccache__ \
+    env -u SYSROOT -u CTARGET -u CHOST emerge -qv app-emulation/qemu
+COPY ./targets/_BTARGET_.package /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+# Inject target variable into the environment
+ENV BTARGET=_BTARGET_

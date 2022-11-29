@@ -1,0 +1,72 @@
+#!/bin/bash
+source /etc/profile
+
+set -e
+set -u
+shopt -s nullglob
+
+# Output variables
+ODIR=/output
+OWNER=$(stat -c '%u:%g' ${ODIR})
+
+# Check whether the output directory exists
+if [[ ! -d ${ODIR} ]]; then
+	echo "docker-entrypoint: output directory does not exist!"
+	exit 1
+else
+	ODIR=${ODIR}/${TPARCH}-${BTARGET}
+	[[ -d ${ODIR} ]] && rm -rf ${ODIR}
+	mkdir ${ODIR}
+fi
+
+cp -r ${SYSROOT}/boot/* ${ODIR}/
+
+OIMG="${ODIR}/rootfs.img"
+QCOWIMG="${ODIR}/rootfs.qcow2"
+
+# Generate and partition an image for rootfs
+fallocate -l 4G ${OIMG}
+sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${OIMG}
+  g # create GUID Partition Table
+  n #
+  1 # (root partition)
+    # default - start at beginning of disk
+    # default - finish at end of disk
+  p #
+  w # write the partition table
+  q # done
+EOF
+
+# Setup the rootfs image file as a loopback device for formatting
+# NOTE: Using `--partscan` here would register only in the default namespace.
+if ! ODEV=$(losetup --show --find ${OIMG}); then
+	echo "docker-entrypoint: unable to setup a loopback device!"
+	exit 1
+elif ! kpartx -usv ${ODEV}; then
+	echo "docker-entrypoint: unable to update partition mappings!"
+	exit 1
+fi
+
+MDIR=$(mktemp -d)
+ODEVN=$(basename ${ODEV})
+ROOTDEVICE=""
+
+# setup rootfs image partition
+mkfs.ext4 -F /dev/mapper/${ODEVN}p1
+ROOTDEVICE="PARTUUID=$(blkid /dev/mapper/${ODEVN}p1 -s PARTUUID -o value)"
+mount /dev/mapper/${ODEVN}p1 ${MDIR}
+	rsync -aAX ${SYSROOT}/. ${MDIR}
+	touch ${MDIR}/etc/machine-id
+	echo "${ROOTDEVICE} /   ext4    rw,relatime 0 1" > ${MDIR}/etc/fstab
+	chroot ${MDIR}/ systemctl preset-all
+	chroot ${MDIR}/ eselect rust update
+umount ${MDIR}
+
+qemu-img convert -f raw -O qcow2 ${OIMG} ${QCOWIMG}
+rm -f ${OIMG}
+
+# Fix permissions
+chown ${OWNER} -R ${ODIR}
+
+# Flush cached writes
+sync && kpartx -dv ${ODEV} && losetup -vd ${ODEV}
