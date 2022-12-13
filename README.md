@@ -1,6 +1,7 @@
 Replica.one
 ===========
 [![Build Status](https://drone.sartura.hr/api/badges/sartura/replica/status.svg?ref=refs/heads/master)](https://drone.sartura.hr/sartura/replica)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsartura%2Freplica.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsartura%2Freplica?ref=badge_shield)
 
 Replica.one is an Open Source build system based on Gentoo with speed and flexibility in mind.
 
@@ -48,3 +49,6 @@ Download the precompiled firmware images from [here](https://drone.sartura.hr/ar
 ## License
 
 [MIT](LICENSE)
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsartura%2Freplica.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsartura%2Freplica?ref=badge_large)
