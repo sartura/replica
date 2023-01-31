@@ -27,8 +27,8 @@ fi
 # Additional helper variables
 #
 if [[ -n ${CTARGET} ]]; then
-	TPARCH=$(inherit() { :; }; source ${TCECLASS}; tc-arch)
-	TKARCH=$(inherit() { :; }; source ${TCECLASS}; tc-arch-kernel)
+	TPARCH=$(inherit() { :; }; EAPI=8; source ${TCECLASS}; tc-arch)
+	TKARCH=$(inherit() { :; }; EAPI=8; source ${TCECLASS}; tc-arch-kernel)
 fi
 
 # Additional helper functions
