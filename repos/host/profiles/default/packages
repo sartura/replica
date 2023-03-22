@@ -4,7 +4,6 @@
 #
 
 # build dependencies and tooling
-*sys-devel/clang
 *dev-util/cmake
 *sys-apps/dtc
 *sys-devel/bc

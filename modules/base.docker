@@ -10,6 +10,14 @@ COPY ./repos/gentoo /var/db/repos/gentoo
 COPY ./environment.sh /etc/profile.d/replica.sh
 SHELL ["/bin/bash", "-l", "-c"]
 
+# Transfer custom overlay from the context and update system
+COPY ./repos/host /var/db/repos/host
+RUN __renv__ __rdistfiles__ __rccache__ \
+    mkdir -p /etc/portage/repos.conf && \
+    set_repository_conf / host 10 && \
+    set_portage_profile / host default && \
+    emerge -vt --keep-going=n --deep --noreplace --changed-use @system
+
 # Install and configure ccache
 ifdef(`_with_ccache_', `
 RUN __renv__ __rdistfiles__ __rccache__ \
@@ -26,14 +34,6 @@ RUN __renv__ __rdistfiles__ __rccache__ \
     echo "FEATURES=\"ccache\"" >> /etc/env.d/10ccache && \
     env-update
 ')dnl
-
-# Transfer custom overlay from the context and update system
-COPY ./repos/host /var/db/repos/host
-RUN __renv__ __rdistfiles__ __rccache__ \
-    mkdir -p /etc/portage/repos.conf && \
-    set_repository_conf / host 10 && \
-    set_portage_profile / host default && \
-    emerge -vt --keep-going=n --deep --noreplace --changed-use @system
 
 # Initialize cross-compilation toolchain and basic target filesystem
 ARG CTARGET=x86_64-multilib-linux-gnu

@@ -6,7 +6,3 @@
 # Enable ZSTD support for MTD-Utils
 sys-fs/mtd-utils zstd
 sys-fs/squashfs-tools zstd
-
-# Required for building eBPF programs, include only used platform targets
-sys-devel/clang llvm_targets_ARM llvm_targets_AArch64 llvm_targets_BPF
-sys-devel/llvm llvm_targets_ARM llvm_targets_AArch64 llvm_targets_BPF
