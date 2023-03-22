@@ -28,7 +28,7 @@ RUN __renv__ __rdistfiles__ __rccache__ \
     set_repository_conf ${SYSROOT} replica 100 && \
     set_repository_conf ${SYSROOT} switch 101 && \
     set_portage_profile ${SYSROOT} switch replica/_BTARGET_ && \
-    cross-emerge -vt --keep-going=n --deep --with-bdeps=y --newuse --newrepo @world || sleep 1h
+    cross-emerge -vt --keep-going=n --deep --with-bdeps=y --newuse --newrepo @world
 
 dnl # Common snippets to clean and configure system
 include(`modules/cleanup.docker')dnl
